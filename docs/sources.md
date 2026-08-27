@@ -41,3 +41,19 @@ Day 1 沒有把外部文章、程式碼、圖片或範例資料放入 Repository
 - 用途：確認 Apple Silicon 本地模型 runtime 的 Python 需求與安裝前提。
 - 使用範圍：只作為 Day 2 runtime smoke test 的參考，不預先假設所有依賴都相容。
 - 是否包含程式碼、文字或圖片：否
+
+### S004：MLX-LM server 文件
+
+- URL：https://github.com/ml-explore/mlx-lm/blob/main/mlx_lm/SERVER.md
+- 存取日期：2026-08-27
+- 用途：確認本地 HTTP server 的啟動方式、模型參數與 OpenAI-compatible endpoint。
+- 使用範圍：依文件重新組合 Day 2 的啟動命令與呼叫流程；沒有複製文章或專案結構。
+- 是否包含程式碼、文字或圖片：否
+
+### S005：uv 安裝文件
+
+- URL：https://docs.astral.sh/uv/getting-started/installation/
+- 存取日期：2026-08-27
+- 用途：確認 uv 的安裝方式與 Python 環境管理命令。
+- 使用範圍：只作為本機工具安裝與環境建立的參考；文章命令依本專案目錄與版本重新整理。
+- 是否包含程式碼、文字或圖片：否

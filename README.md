@@ -2,7 +2,7 @@
 
 這是「AI Engineering 研究前線」30 天實作專案的工作 Repository。報名標題維持不變；本專案的實作目標是讓只使用過網頁對話式 AI 的讀者，逐步建立一套可以在自己電腦上執行的本地工程知識助理。
 
-目前進度：**Day 1／專案範圍與環境基線**
+目前進度：**Day 2／第一次在本機呼叫模型**
 
 ## 專案目標
 
@@ -63,6 +63,32 @@ Local LLM
 - [原創性檢查](docs/originality-check.md)
 - [文章寫作規範](docs/article-style.md)
 
+## Day 2
+
+Day 2 已建立 Python 3.13 的隔離環境、安裝 `mlx-lm`，並用 `frontier_knowledge.py` 呼叫本地模型。完整操作與實際輸出請看 [Day 2 文章](articles/day02.md)。
+
+在 Apple Silicon 上可依序執行：
+
+```bash
+uv venv --python 3.13
+uv sync
+```
+
+終端機一：
+
+```bash
+uv run mlx_lm.server \
+  --model mlx-community/Llama-3.2-3B-Instruct-4bit \
+  --port 8080
+```
+
+終端機二：
+
+```bash
+uv run python frontier_knowledge.py \
+  "請用一句話說明本地模型和網頁聊天 AI 的差別。"
+```
+
 ## Day 1 之後
 
-Day 2 才加入最小的本地模型呼叫；在那之前，本 Repository 刻意不宣稱模型或 RAG 已經可以執行。
+Day 3 會在這個最小呼叫上建立可重複使用的 Chat Runner。RAG、Agent 和 MCP 仍然不會在第一週一開始就加入。
