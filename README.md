@@ -61,6 +61,7 @@ Local LLM
 - [設計決策](docs/design-decisions.md)
 - [來源紀錄](docs/sources.md)
 - [原創性檢查](docs/originality-check.md)
+- [文章寫作規範](docs/article-style.md)
 
 ## Day 1 之後
 
