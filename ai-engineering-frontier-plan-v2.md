@@ -224,6 +224,10 @@ Optional draft model: incoai/Qwen3.8-27B-DFlash2
 
 第一週只選一個主要 runtime，避免讀者同時安裝太多框架。優先採用能在 Apple Silicon 上穩定執行、並提供 OpenAI-compatible API 的本地 runtime。
 
+### Python 版本策略
+
+不要把目前電腦上的 `python3` 版本直接當成專案基線。Python 3.9 已結束官方支援；本專案以 Python 3.13.x 作為主要教學與測試版本，Python 3.12 作為保守相容版本，Python 3.14 則在主要依賴完成 smoke test 後再列入相容性測試。`pyproject.toml` 應在 Day 2 建立後明確寫出版本範圍，避免讀者不小心使用系統 Python。
+
 後續程式碼盡量透過統一的 `LLMClient` 呼叫模型：
 
 ```python
