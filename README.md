@@ -2,7 +2,7 @@
 
 這是「AI Engineering 研究前線」30 天實作專案的工作 Repository。報名標題維持不變；本專案的實作目標是讓只使用過網頁對話式 AI 的讀者，逐步建立一套可以在自己電腦上執行的本地工程知識助理。
 
-目前進度：**Day 2／第一次在本機呼叫模型**
+目前進度：**Day 3／建立 Baseline Chat Runner**
 
 ## 專案目標
 
@@ -65,21 +65,23 @@ Local LLM
 
 ## Day 2
 
-Day 2 已建立 Python 3.13 的隔離環境、安裝 `mlx-lm`，並用 `frontier_knowledge.py` 呼叫本地模型。完整操作與實際輸出請看 [Day 2 文章](articles/day02.md)。
+Day 2 已建立 Python 3.13 的隔離環境，並用 `frontier_knowledge.py` 呼叫本地模型。完整操作與實際輸出請看 [Day 2 文章](articles/day02.md)。
 
-在 Apple Silicon 上可依序執行：
+在 macOS Apple Silicon 上：
 
 ```bash
+uv python install 3.13
+uv python pin 3.13
 uv venv --python 3.13
 uv sync
 ```
 
-終端機一：
+終端機一（macOS）：
 
 ```bash
 uv run mlx_lm.server \
   --model mlx-community/Llama-3.2-3B-Instruct-4bit \
-  --port 8080
+  --port 8081
 ```
 
 終端機二：
@@ -89,6 +91,16 @@ uv run python frontier_knowledge.py \
   "請用一句話說明本地模型和網頁聊天 AI 的差別。"
 ```
 
-## Day 1 之後
+## Day 3
 
-Day 3 會在這個最小呼叫上建立可重複使用的 Chat Runner。RAG、Agent 和 MCP 仍然不會在第一週一開始就加入。
+Day 3 在既有的單次呼叫上加入互動式 Chat Runner。省略 prompt 或加上 `--interactive` 後，程式會持續等待問題；輸入 `exit`、`quit` 或 `:q` 可以結束。完整操作與限制請看 [Day 3 文章](articles/day03.md)。
+
+```bash
+uv run python frontier_knowledge.py --interactive
+```
+
+單次 prompt 的 Day 2 命令仍然可以使用。Day 3 每次請求只送出目前輸入，尚未保存對話歷史。
+
+## Day 3 之後
+
+接下來會在這個 runner 上逐步加入回答規則與上下文處理；目前先維持單純、可觀察的本地呼叫流程。
