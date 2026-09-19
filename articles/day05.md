@@ -1,6 +1,6 @@
 # AI Engineering 研究前線：30 天讀懂一週一週長出來的技術脈絡
 
-## Day 5：讓回答固定格式，先檢查模型交回來的 JSON
+## Day 5：讓模型回答固定 JSON 格式
 
 Day 4 已經把固定的 `system message` 放進每次請求，但 Runner 收到模型的 `message.content` 後就直接印出來。今天只改一件事：加上可選的 `--json-answer`，讓程式要求並檢查固定格式的回答。
 
