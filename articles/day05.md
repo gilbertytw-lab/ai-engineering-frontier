@@ -96,4 +96,3 @@ Day 05 讓 Runner 多了一個可選的結構化輸出入口。程式現在知�
 - [Day 4：Prompt 到底改變了什麼？](day04.md)
 - [Python 3.13：json.loads()](https://docs.python.org/3.13/library/json.html#json.loads)
 - [MLX-LM server 官方文件](https://github.com/ml-explore/mlx-lm/blob/main/mlx_lm/SERVER.md)
-- [本篇驗證與編輯紀錄](../docs/day05-verification.md)
