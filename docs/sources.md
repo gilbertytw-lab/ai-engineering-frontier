@@ -73,3 +73,35 @@ Day 1 沒有把外部文章、程式碼、圖片或範例資料放入 Repository
 - 用途：確認官方部署文件提供的 context 設定範例。
 - 使用範圍：只作為模型 context 設定的補充參考；文章依本專案的 32 GB Mac 環境重新整理。
 - 是否包含程式碼、文字或圖片：否
+
+## Day 4
+
+### S008：MLX-LM server 文件
+- URL：https://github.com/ml-explore/mlx-lm/blob/main/mlx_lm/SERVER.md
+- 存取日期：2026-09-17
+- 用途：確認 Day 4 延續使用的本地 chat-completions server 入口。
+- 使用範圍：核對 `messages` payload 與本地 server 的呼叫邊界；Day 4 的 system message 內容由本專案自行設計。
+- 是否包含程式碼、文字或圖片：否
+
+### S009：MLX-LM server 實作
+- URL：https://github.com/ml-explore/mlx-lm/blob/main/mlx_lm/server.py
+- 存取日期：2026-09-17
+- 用途：確認 `system`、`user` message 會交給模型 tokenizer 的 chat template 處理。
+- 使用範圍：只用來核對本機已安裝 `mlx-lm 0.31.3` 的實作行為，不複製程式碼。
+- 是否包含程式碼、文字或圖片：否
+
+## Day 5
+
+### S010：Python 3.13 json 官方文件
+- URL：https://docs.python.org/3.13/library/json.html
+- 存取日期：2026-09-19
+- 用途：核對 `json.loads()`、JSON 與 Python 型別對應、`object_pairs_hook`、`parse_constant`，以及重複欄位與 NaN 的預設行為。
+- 使用範圍：Day 5 的兩層解析解說與本專案自訂回答驗證器；程式與例子自行撰寫。
+- 是否包含程式碼、文字或圖片：否
+
+### S011：MLX-LM server 官方文件
+- URL：https://github.com/ml-explore/mlx-lm/blob/main/mlx_lm/SERVER.md
+- 存取日期：2026-09-19
+- 用途：確認 chat endpoint、messages 與啟動參數；避免從 API 外形推定格式保證。
+- 使用範圍：Day 5 沿用 server 入口；線上 main 文件與本機 0.31.3 分開標示，功能結論以本機測試為準。
+- 是否包含程式碼、文字或圖片：否

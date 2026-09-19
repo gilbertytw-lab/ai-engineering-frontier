@@ -23,6 +23,12 @@
 - [x] `articles/day03.md` 記錄實際完成的靜態檢查、stub smoke test、Metal device 限制與後續真實模型驗證。
 - [x] 沒有複製外部 CLI、Prompt、文章段落或程式碼。
 
+## Day 4 已完成
+
+- [x] `system` message、預設內容與 `--no-system-prompt` 比較入口由本專案依目前 runner 需求設計。
+- [x] `articles/day04.md` 只記錄本次 request-payload smoke test 與目前無 Metal device 的限制。
+- [x] 沒有複製外部 Prompt、文章段落或程式碼；MLX-LM 文件只用來核對 chat-completions 與 message role 的介面。
+
 ## 每日發文前
 
 - [ ] 文章內容來自當天自己的實作、測試與失敗紀錄。

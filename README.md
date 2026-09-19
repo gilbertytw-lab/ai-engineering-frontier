@@ -2,7 +2,7 @@
 
 這是「AI Engineering 研究前線」30 天實作專案的工作 Repository。報名標題維持不變；本專案的實作目標是讓只使用過網頁對話式 AI 的讀者，逐步建立一套可以在自己電腦上執行的本地工程知識助理。
 
-目前進度：**Day 3／建立 Baseline Chat Runner**
+目前進度：**Day 5／加入 JSON 回答格式驗證**
 
 ## 專案目標
 
@@ -101,6 +101,32 @@ uv run python frontier_knowledge.py --interactive
 
 單次 prompt 的 Day 2 命令仍然可以使用。Day 3 每次請求只送出目前輸入，尚未保存對話歷史。
 
-## Day 3 之後
+## Day 4
 
-接下來會在這個 runner 上逐步加入回答規則與上下文處理；目前先維持單純、可觀察的本地呼叫流程。
+Day 4 在每次請求的 `messages` 前面加入預設的 `system` message，讓模型收到固定的回答規則。需要比較加入規則前後的差異時，可以使用 `--no-system-prompt`。
+
+```bash
+uv run python frontier_knowledge.py \
+  "請說明今天的測試重點。"
+
+uv run python frontier_knowledge.py \
+  --no-system-prompt \
+  "請說明今天的測試重點。"
+```
+
+完整操作與限制請看 [Day 4 文章](articles/day04.md)。
+
+## Day 5
+
+加入 `--json-answer` 後，模型會收到 JSON 格式要求，程式會檢查 `answer` 與 `limitations` 兩個欄位。格式不合時回報錯誤；省略選項則保留文字模式。
+
+```bash
+uv run python frontier_knowledge.py \
+  --model mlx-community/Qwen3.8-27B-4bit \
+  --max-tokens 1024 --json-answer \
+  "請用一句話說明本地模型。"
+
+uv run python -m unittest discover -s tests -v
+```
+
+完整教學見 [Day 5 文章](articles/day05.md)，驗證範圍見 [Day 5 驗證紀錄](docs/day05-verification.md)。格式通過不代表內容正確。
