@@ -57,12 +57,18 @@ def parse_answer(content: str) -> dict[str, object]:
     return answer
 
 
-def build_messages(prompt: str, system_prompt: str | None) -> list[dict[str, str]]:
+def build_messages(
+    prompt: str,
+    system_prompt: str | None,
+    history: list[dict[str, str]] | None = None,
+) -> list[dict[str, str]]:
     """Build the chat messages sent to the local runtime."""
 
     messages: list[dict[str, str]] = []
     if system_prompt:
         messages.append({"role": "system", "content": system_prompt})
+    if history:
+        messages.extend(history)
     messages.append({"role": "user", "content": prompt})
     return messages
 
@@ -76,13 +82,14 @@ def call_local_model(
     temperature: float,
     max_tokens: int,
     json_answer: bool = False,
+    history: list[dict[str, str]] | None = None,
 ) -> str:
     """Call the local chat-completions endpoint and return the answer text."""
 
     if json_answer:
         system_prompt = "\n".join(filter(None, [system_prompt, JSON_ANSWER_PROMPT]))
     payload: dict[str, object] = {
-        "messages": build_messages(prompt, system_prompt),
+        "messages": build_messages(prompt, system_prompt, history),
         "temperature": temperature,
         "max_tokens": max_tokens,
     }
@@ -157,9 +164,16 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--temperature", type=float, default=0.2)
     parser.add_argument("--max-tokens", type=int, default=256)
     parser.add_argument("--json-answer", action="store_true", help="要求並驗證 JSON 回答格式")
+    parser.add_argument(
+        "--no-history",
+        action="store_true",
+        help="互動模式不附上先前回合，方便和 Day 5 比較",
+    )
     args = parser.parse_args()
     if args.interactive and args.prompt is not None:
         parser.error("--interactive 不可和單次 prompt 同時使用")
+    if args.no_history and args.prompt is not None:
+        parser.error("--no-history 只適用於互動模式")
     if args.json_answer and args.no_system_prompt:
         parser.error("--json-answer 需要 system 格式指令，不可和 --no-system-prompt 同時使用")
     return args
@@ -173,10 +187,12 @@ def run_interactive(
     temperature: float,
     max_tokens: int,
     json_answer: bool = False,
+    keep_history: bool = True,
 ) -> int:
-    """Read prompts until the user exits, keeping each request independent."""
+    """Read prompts until the user exits, optionally retaining successful turns."""
 
     print("已進入互動模式。輸入 exit、quit 或 :q 結束。")
+    history: list[dict[str, str]] = []
     while True:
         try:
             prompt = input("你 > ").strip()
@@ -199,12 +215,20 @@ def run_interactive(
                 temperature=temperature,
                 max_tokens=max_tokens,
                 json_answer=json_answer,
+                history=history.copy() if keep_history else None,
             )
         except RuntimeError as error:
             print(f"錯誤：{error}", file=sys.stderr)
             continue
 
         print(f"模型 > {answer}")
+        if keep_history:
+            history.extend(
+                [
+                    {"role": "user", "content": prompt},
+                    {"role": "assistant", "content": answer},
+                ]
+            )
 
 
 def main() -> int:
@@ -219,6 +243,7 @@ def main() -> int:
             temperature=args.temperature,
             max_tokens=args.max_tokens,
             json_answer=args.json_answer,
+            keep_history=not args.no_history,
         )
 
     try:
