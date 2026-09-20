@@ -23,6 +23,16 @@ JSON_ANSWER_PROMPT = (
     '資訊不足時在 answer 說明不知道，並在 limitations 說明缺少什麼；'
     '沒有要補充的限制時使用空陣列 []。不要加 Markdown 程式碼圍欄或 JSON 以外的文字。'
 )
+CHECKPOINT_CODE = "港口 17"
+CHECKPOINT_READY = "收到"
+CHECKPOINT_FIRST_PROMPT = (
+    f'請記住代號「{CHECKPOINT_CODE}」。answer 只回答「{CHECKPOINT_READY}」，'
+    "limitations 使用空陣列。"
+)
+CHECKPOINT_SECOND_PROMPT = (
+    "上一題要你記住的代號是什麼？answer 只回答代號，"
+    "limitations 使用空陣列。"
+)
 
 
 def parse_answer(content: str) -> dict[str, object]:
@@ -141,6 +151,11 @@ def parse_args() -> argparse.Namespace:
         help="明確啟動互動模式",
     )
     parser.add_argument(
+        "--checkpoint",
+        action="store_true",
+        help="執行 Day 7 端到端驗收：JSON 格式與 Session history",
+    )
+    parser.add_argument(
         "--base-url",
         default=os.getenv("LOCAL_RUNTIME_URL", DEFAULT_BASE_URL),
         help=f"runtime 的 API 位址（預設：{DEFAULT_BASE_URL}）",
@@ -172,11 +187,78 @@ def parse_args() -> argparse.Namespace:
     args = parser.parse_args()
     if args.interactive and args.prompt is not None:
         parser.error("--interactive 不可和單次 prompt 同時使用")
+    if args.checkpoint and (args.interactive or args.prompt is not None):
+        parser.error("--checkpoint 不可和 --interactive 或單次 prompt 同時使用")
+    if args.checkpoint and args.no_system_prompt:
+        parser.error("--checkpoint 需要 system message，不可和 --no-system-prompt 同時使用")
+    if args.checkpoint and args.json_answer:
+        parser.error("--checkpoint 已固定驗證 JSON 回答，不需要 --json-answer")
+    if args.checkpoint and args.no_history:
+        parser.error("--checkpoint 已固定驗證 Session history，不可和 --no-history 同時使用")
     if args.no_history and args.prompt is not None:
         parser.error("--no-history 只適用於互動模式")
     if args.json_answer and args.no_system_prompt:
         parser.error("--json-answer 需要 system 格式指令，不可和 --no-system-prompt 同時使用")
     return args
+
+
+def run_checkpoint(
+    *,
+    base_url: str,
+    model: str | None,
+    system_prompt: str,
+    max_tokens: int,
+) -> int:
+    """Verify structured answers and session history against a live runtime."""
+
+    history: list[dict[str, str]] = []
+    try:
+        first_content = call_local_model(
+            CHECKPOINT_FIRST_PROMPT,
+            base_url=base_url,
+            model=model,
+            system_prompt=system_prompt,
+            temperature=0,
+            max_tokens=max_tokens,
+            json_answer=True,
+            history=history.copy(),
+        )
+        first_answer = parse_answer(first_content)
+        if first_answer != {"answer": CHECKPOINT_READY, "limitations": []}:
+            raise RuntimeError("第一輪沒有按約定回答「收到」與空的 limitations")
+        print(f"Checkpoint 1/2：單次 JSON 回答通過（answer={CHECKPOINT_READY}）")
+
+        history.extend(
+            [
+                {"role": "user", "content": CHECKPOINT_FIRST_PROMPT},
+                {"role": "assistant", "content": first_content},
+            ]
+        )
+        second_content = call_local_model(
+            CHECKPOINT_SECOND_PROMPT,
+            base_url=base_url,
+            model=model,
+            system_prompt=system_prompt,
+            temperature=0,
+            max_tokens=max_tokens,
+            json_answer=True,
+            history=history.copy(),
+        )
+        second_answer = parse_answer(second_content)
+    except RuntimeError as error:
+        print(f"Day 7 checkpoint：FAIL（{error}）", file=sys.stderr)
+        return 1
+
+    if second_answer != {"answer": CHECKPOINT_CODE, "limitations": []}:
+        print(
+            "Day 7 checkpoint：FAIL（第二輪沒有按約定回答第一輪的代號）",
+            file=sys.stderr,
+        )
+        return 1
+
+    print(f"Checkpoint 2/2：Session history 回答通過（answer={CHECKPOINT_CODE}）")
+    print("Day 7 checkpoint：PASS")
+    return 0
 
 
 def run_interactive(
@@ -234,6 +316,14 @@ def run_interactive(
 def main() -> int:
     args = parse_args()
     system_prompt = None if args.no_system_prompt else args.system_prompt
+
+    if args.checkpoint:
+        return run_checkpoint(
+            base_url=args.base_url,
+            model=args.model,
+            system_prompt=system_prompt,
+            max_tokens=args.max_tokens,
+        )
 
     if args.interactive or args.prompt is None:
         return run_interactive(

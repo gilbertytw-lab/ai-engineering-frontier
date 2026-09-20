@@ -2,7 +2,7 @@
 
 這是「AI Engineering 研究前線」30 天實作專案的工作 Repository。報名標題維持不變；本專案的實作目標是讓只使用過網頁對話式 AI 的讀者，逐步建立一套可以在自己電腦上執行的本地工程知識助理。
 
-目前進度：**Day 6／加入互動模式的 Session history**
+目前進度：**Day 7／第一週 Chat Runner checkpoint**
 
 ## 專案目標
 
@@ -152,3 +152,24 @@ uv run python frontier_knowledge.py \
 ```
 
 完整教學見 [Day 6 文章](articles/day06.md)，驗證範圍見 [Day 6 驗證紀錄](docs/day06-verification.md)。
+
+## Day 7
+
+第一週 checkpoint 會對真實的本地 runtime 發出兩個 request。第一輪驗證固定 JSON 回答，第二輪從 Session history 找回第一輪的代號；兩輪都通過才輸出 `PASS`。
+
+```bash
+uv run python frontier_knowledge.py \
+  --checkpoint \
+  --model mlx-community/Qwen3.8-27B-4bit \
+  --max-tokens 1024
+```
+
+本次實測輸出：
+
+```text
+Checkpoint 1/2：單次 JSON 回答通過（answer=收到）
+Checkpoint 2/2：Session history 回答通過（answer=港口 17）
+Day 7 checkpoint：PASS
+```
+
+完整教學見 [Day 7 文章](articles/day07.md)，驗證範圍見 [Day 7 驗證紀錄](docs/day07-verification.md)。
