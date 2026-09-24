@@ -93,6 +93,7 @@ def call_local_model(
     max_tokens: int,
     json_answer: bool = False,
     history: list[dict[str, str]] | None = None,
+    chat_template_kwargs: dict[str, object] | None = None,
 ) -> str:
     """Call the local chat-completions endpoint and return the answer text."""
 
@@ -105,6 +106,8 @@ def call_local_model(
     }
     if model:
         payload["model"] = model
+    if chat_template_kwargs:
+        payload["chat_template_kwargs"] = chat_template_kwargs
 
     request = Request(
         f"{base_url.rstrip('/')}/chat/completions",

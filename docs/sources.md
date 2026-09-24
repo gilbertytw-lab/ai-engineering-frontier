@@ -105,3 +105,35 @@ Day 1 沒有把外部文章、程式碼、圖片或範例資料放入 Repository
 - 用途：確認 chat endpoint、messages 與啟動參數；避免從 API 外形推定格式保證。
 - 使用範圍：Day 5 沿用 server 入口；線上 main 文件與本機 0.31.3 分開標示，功能結論以本機測試為準。
 - 是否包含程式碼、文字或圖片：否
+
+## Day 8 來源轉換
+
+### S012：pypdf 文字抽取文件
+- URL：https://pypdf.readthedocs.io/en/6.18.1/user/extract-text.html
+- 存取日期：2026-09-22
+- 用途：確認 `PdfReader` 與 page-level `extract_text()` 的使用方式，以及掃描型 PDF 可能沒有可抽取文字的限制。
+- 使用範圍：`source-to-raw-md` 使用 `pypdf` 抽取有文字層的 PDF；本專案自行撰寫程式，沒有複製文件內容或程式碼。
+- 是否包含程式碼、文字或圖片：否
+
+### S013：LibreOffice 文件轉換 filters
+- URL：https://help.libreoffice.org/latest/ast/text/shared/guide/convertfilters.html
+- 存取日期：2026-09-22
+- 用途：確認舊版 DOC 可透過 LibreOffice 的 command-line conversion workflow 轉成可再抽取的文件格式。
+- 使用範圍：曾用於文件轉換草稿的 `.doc` 路徑；草稿已保存於專案工作備份，未納入 Day 8 交付。沒有納入 LibreOffice 程式碼或文件內容。
+- 是否包含程式碼、文字或圖片：否
+
+### S014：Example Domain
+- URL：https://example.com
+- 存取日期：2026-09-22
+- 用途：以公開靜態網頁測試網址下載、HTML 文字與連結抽取，再由程式轉成 Markdown。
+- 使用範圍：Day 8 的網頁路徑 smoke test；網頁快照與轉換結果保存在本機驗證工作區，沒有併入 `harbor-api` 示範資料。
+- 是否包含程式碼、文字或圖片：只用於測試；沒有複製原文至 Repository 文章。
+
+## Day 10 SQLite lexical retrieval
+
+### S015：SQLite FTS5 Extension
+- URL：https://sqlite.org/fts5.html
+- 存取日期：2026-09-24
+- 用途：核對 FTS5 virtual table、MATCH 查詢與 `bm25()` ranking function 的介面與排序行為。
+- 使用範圍：`knowledge/retrieve.py` 以 Python `sqlite3` 重新組合本專案的 chunk index、查詢和來源欄位；沒有複製文件程式碼或文章內容。
+- 是否包含程式碼、文字或圖片：否

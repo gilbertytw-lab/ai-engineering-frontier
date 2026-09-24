@@ -56,9 +56,13 @@ Local LLM
     ↓
 可重複呼叫的 Chat Runner
     ↓
-knowledge/raw：原始文件
+knowledge/inbox：待處理原檔與網頁快照；成功後移入 processed/
     ↓
-deterministic ingest：metadata、hash、chunk
+來源轉換：程式讀完整來源並補上來源欄位；不呼叫 Qwen
+    ↓
+knowledge/raw：固定格式的 Markdown
+    ↓
+deterministic ingest：長文件分段、文件版本、chunk manifest
     ↓
 knowledge/wiki：可讀的 source、concept、howto
     ↓
@@ -91,15 +95,21 @@ Evaluation 與完整 README
 
 本專案從「原始資料、可讀整理、可重建索引」這個一般性的資料工程需求出發，設計簡化的知識保存層與 RAG。它可以與個人的 Miracle Vault 互通，但不複製任何既有專案的命名、目錄、程式或文章敘事，也不把完整 Obsidian Vault 或完整 LLM 編譯流程當成必要依賴。
 
-### 三層責任
+### 資料層責任
 
 ```text
+Source Layer
+  inbox/             待處理原檔與網頁快照
+  inbox/processed/   已轉換且可回查的原件
+
+Evidence Layer
+  raw/       帶來源欄位的 Markdown，可由 inbox/processed 重建
+
 Knowledge Layer
-  raw/       原始證據，保留原貌
   wiki/      人類可讀的整理與壓縮
 
 Retrieval Layer
-  manifest   文件版本、hash、metadata
+  manifest   從 raw 建立的文件版本與 chunk 定位
   index      FTS/BM25/embedding，可刪除後重建
 
 Context Layer
@@ -110,9 +120,10 @@ Context Layer
 資料保存的優先順序是：
 
 ```text
-raw 是 source of truth
+inbox 是 source of truth
+raw 是可重建的標準化文字
 wiki 是 curated knowledge layer
-index 是 derived artifact
+manifest 與 index 是 derived artifact
 ```
 
 `index.md`、`overview.md` 與 `log.md` 是人類和 LLM 的導航層，不取代機器搜尋索引。查詢時不把完整的 index、overview 或 log 送進模型，而是從索引找回少量、有來源定位的 chunks。
@@ -163,7 +174,7 @@ wiki 摘要與 raw chunk 不應重複大量放入同一次請求。wiki 用來�
 
 ### 外部 Vault 使用規則
 
-`/Users/gilbert/Miracle/AI/` 可以作為進階 dogfood corpus，但必須以唯讀外部路徑使用，不要寫死在程式中，也不要把個人 Vault 或大型 raw assets 提交到參賽 Repo。初學者第一版使用專案內的 `knowledge/raw/` 範例文件。
+`/Users/gilbert/Miracle/raw/` 可以作為進階 dogfood corpus，但必須以唯讀外部路徑使用，不要寫死在程式中，也不要把個人 Vault 或大型 raw assets 提交到參賽 Repo。初學者第一版使用專案內的 `knowledge/raw/` 範例文件。
 
 ## 5. 系統故事：從聊天到知識助理
 
@@ -183,12 +194,13 @@ Day 30：系統有來源、評估、日誌與安全限制
 建議使用一組自己撰寫、可公開的虛構工程文件，例如：
 
 ```text
-knowledge/raw/sample_docs/
-├── deployment-guide.md
-├── api-spec.md
-├── incident-runbook.md
-├── service-config.md
-└── release-policy.md
+knowledge/inbox/
+└── processed/
+    ├── deployment-guide.md
+    ├── api-spec.md
+    ├── incident-runbook.md
+    ├── service-config.md
+    └── release-policy.md
 ```
 
 文件可以刻意放入只有資料集才知道的版本號、服務名稱與設定值，避免模型憑既有知識猜答案。資料集必須包含：
@@ -219,7 +231,7 @@ Optional draft model: incoai/Qwen3.8-27B-DFlash2
 - [MLX 4-bit 版本](https://huggingface.co/mlx-community/Qwen3.8-27B-4bit)
 - [DFlash2 模型說明](https://huggingface.co/incoai/Qwen3.8-27B-DFlash2)
 
-32GB Mac 應以 4-bit 版本作為起點。模型是否能穩定支援 8K 或 16K context，必須以實測結果為準；32K 只列為挑戰項目。
+32 GB Mac 以 4-bit 版本作為起點。模型檔宣告的最大 context 不是這台電腦可實用的請求長度；還要扣掉權重、KV cache、runtime 與輸出預留，並觀察延遲。Day 8 的實測顯示，讓 Qwen 逐字轉寫數千字來源會花數分鐘；程式轉換則已處理三篇完整論文的文字層。Day 9 先用固定問題量測短、中、長三組輸入的 token 數、耗時與記憶體，再決定本機可用的證據預算。在完成量測前，不宣稱 8K、16K 或 32K 可穩定使用。
 
 ### Runtime 原則
 
@@ -237,15 +249,9 @@ client.chat(messages, tools=None, response_format=None)
 
 如此讀者日後換模型或 runtime 時，不需要重寫 RAG 與 Agent。
 
-### 降級路徑
+### 硬體受限時的工作路徑
 
-如果 27B 模型在實際 Mac 上無法穩定執行，降級順序如下：
-
-1. 維持同一個 target model，改用較小 context。
-2. 改用同一系列較小的 MLX 模型完成教學。
-3. 保留 27B 作為效能與品質附錄。
-
-降級時不要改變後續 API、資料格式與架構，讓讀者仍然能完成整個系列。
+正式實驗維持 Qwen3.8-27B，不改用小模型代跑。先把耗時的文件抽字、格式整理、切塊、索引與檢索交給確定性程式；Qwen 只接收問題與少量已選出的證據。每次請求預留輸出額度，超過本機實測的輸入或延遲預算就減少證據、縮短對話歷史，仍無法完成時明確回報限制。模型呼叫的速度與品質分開記錄；mock API 測試只能驗證程式流程，不能充當 Qwen 成果。
 
 ## 7. 30 天文章與 Git 產出
 
@@ -269,15 +275,15 @@ client.chat(messages, tools=None, response_format=None)
 
 | Day | 文章主題 | 當日可見成果 | Git 產出 |
 |---:|---|---|---|
-| 8 | 準備自己的工程文件 | `knowledge/raw` 與文件格式 | `day08: add raw documents` |
-| 9 | Ingest 不只是複製檔案 | metadata、hash、chunk manifest | `day09: add deterministic ingest` |
+| 8 | 不呼叫模型，批次轉換 inbox 中的完整文字、PDF 與網頁快照 | `knowledge/convert.py`、`source-to-raw-md` skill、已處理原檔與五份示範 raw，以及完整 PDF／網頁驗證紀錄 | `day08: add programmatic source conversion` |
+| 9 | 將 raw 分段並量測本機問答預算 | 可重建的文件版本、chunk manifest，以及 Qwen 輸入長度／耗時量測 | `day09: add bounded ingest` |
 | 10 | 先不用向量資料庫：關鍵字搜尋 | SQLite FTS/BM25 retriever | `day10: add lexical retrieval` |
 | 11 | 如何整理可維護的知識頁？ | 第一個 source 與 howto 頁面 | `day11: add wiki knowledge layer` |
-| 12 | 三種證據路徑怎麼比較？ | raw、wiki、hierarchical 三組比較 | `day12: compare retrieval paths` |
-| 13 | 讓有限 context 用在刀口上 | context budget、去重、排序 | `day13: add context builder` |
-| 14 | 組出有來源的 RAG | citation、no-answer、可重建索引 | `day14: checkpoint-rag` |
+| 12 | 三種證據路徑怎麼比較？ | raw、wiki、hierarchical 的檢索結果與成本比較；Qwen 僅跑固定少量案例 | `day12: compare retrieval paths` |
+| 13 | 讓有限 context 用在刀口上 | 依 Day 9 實測值限制證據、歷史與輸出，並做去重、排序 | `day13: add context builder` |
+| 14 | 組出有來源的 RAG | 短證據回答、citation、no-answer、可重建索引與耗時紀錄 | `day14: checkpoint-rag` |
 
-`index.md` 是人類可讀的導航；SQLite FTS／embedding index 是機器查詢層，兩者要分開。先用 SQLite 或 JSON 建立最小索引，不要求讀者一開始就安裝獨立 Vector Database。向量資料庫服務化放在延伸文章中。
+`index.md` 是人類可讀的導航；SQLite FTS／embedding index 是機器查詢層，兩者要分開。先用 SQLite 或 JSON 建立最小索引，不要求讀者一開始就安裝獨立 Vector Database。向量資料庫服務化放在延伸文章中。長 PDF 的圖、表與多欄閱讀順序不能只靠文字抽取保證正確；沒有完成版面核對的內容不得標成已完整 ingest。
 
 ### Week 3：讓 AI 開始做安全的小事
 
@@ -304,7 +310,7 @@ Day 20 的 MCP 是 optional。即使跳過，讀者仍然能完成後續 Agent �
 | 26 | 記憶先從 Session State 開始 | 可重設的短期記憶 | `day26: add session state` |
 | 27 | Prompt Injection 與安全邊界 | 不信任文件、工具與輸入 | `day27: add safety checks` |
 
-這一週不做多 Agent、不開放 shell、不讓模型自行修改檔案。Agent 的預設工具必須是唯讀，最多 3 步，並且每一步都留下 log。
+這一週不做多 Agent、不開放 shell、不讓模型自行修改檔案。Agent 的預設工具必須是唯讀，最多 3 步，並且每一步都留下 log。第一版每個任務先限制為一次 Qwen 判斷，其餘參數檢查、工具執行與結果驗證由程式處理；增加模型回合前要先量測整段任務延遲。
 
 ### Week 5：評估、包裝與交付
 
@@ -369,7 +375,7 @@ C. Hierarchical RAG
    metadata/source/concept → raw evidence chunks → answer
 ```
 
-C 是本專案預期的主架構，但不能先假設它一定最好。必須用資料證明它是否在相近 token 預算下帶來更好的回答品質、引用正確率或檢索命中率。
+C 是本專案預期的主架構，但不能先假設它一定最好。先用整份題庫比較可離線計算的檢索命中、chunk 數與 token 成本；每條路徑再挑固定少量題目交給 Qwen 比較回答與引用。不要在 32 GB 筆電上把 30 題乘以三條路徑當成每次修改都要重跑的即時測試。完整模型評估若耗時超出可用預算，保留題庫、抽樣規則與未完成範圍，不能用 mock 回答冒充實測。
 
 主要指標：
 
@@ -410,6 +416,7 @@ Context builder 的最低要求：
 4. 優先保留有標題、來源與行號的證據。
 5. 超過 retrieval budget 時，截斷候選，不直接擴大 context。
 6. 保存「被選入」與「被淘汰」的候選，方便日後診斷 retrieval 失敗。
+7. 以 Day 9 的本機量測值設硬上限；同時記錄 prompt tokens、生成 tokens、耗時與失敗原因。
 
 ## 10. Git 日更規則
 
@@ -509,8 +516,14 @@ ai-engineering-frontier/
 ├── data/
 │   └── benchmark.jsonl
 ├── knowledge/
+│   ├── convert.py
+│   ├── inbox/
+│   │   └── processed/
+│   │       ├── api-spec.md
+│   │       └── ...
 │   ├── raw/
-│   │   └── sample_docs/
+│   │   ├── doc-fe96deca8c6c492f.md
+│   │   └── ...
 │   └── wiki/
 │       ├── sources/
 │       ├── concepts/
@@ -536,7 +549,7 @@ ai-engineering-frontier/
 
 `runs/` 可以只提交結果摘要，不必提交全部大型原始輸出。若要保留完整結果，使用小型 JSONL 並設定檔案大小上限。
 
-`knowledge/raw/` 與 `knowledge/wiki/` 是可讀、可備份的內容層；`indexes/` 是 derived artifact，可以刪除後由 `ingest` 重新建立。
+`knowledge/inbox/` 是待處理區；成功轉換的原件保存在 `knowledge/inbox/processed/`。`knowledge/raw/` 與 `knowledge/wiki/` 是可讀的處理層。`raw/` 可由已處理原件重新轉換，`indexes/` 是可由 ingest 重建的衍生物。
 
 ## 13. Day 30 的完成定義
 

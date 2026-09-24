@@ -29,6 +29,25 @@
 - [x] `articles/day04.md` 只記錄本次 request-payload smoke test 與目前無 Metal device 的限制。
 - [x] 沒有複製外部 Prompt、文章段落或程式碼；MLX-LM 文件只用來核對 chat-completions 與 message role 的介面。
 
+## Day 8 已完成
+
+- [x] 五份 `harbor-api` 工程文件、服務名稱、門檻、設定值與流程均由本專案自行設計。
+- [x] `knowledge/inbox/processed/` 保存五份原始示範文件；`knowledge/raw/` 保存程式完整轉換並加上來源欄位的 Markdown。文件沒有放入真實公司資料、秘密、個人資料或第三方文章。
+- [x] `incident-runbook.md` 的 untrusted text 是本專案自行加入的安全測試 fixture，並明確標示為文件資料，不是操作指令。
+- [x] Day 8 的 `source-to-raw-md` skill、格式檢查與測試由本專案自行撰寫；Qwen 轉換舊版與舊 raw 保存在本機遷移備份，沒有當成現行交付。
+
+## Day 9 已完成
+
+- [x] `knowledge/ingest.py`、`knowledge/measure.py`、chunk manifest 格式、token budget 與 benchmark 問題由本專案依 Day 8 的五份虛構 `harbor-api` 文件自行設計。
+- [x] 文章中的 5 份文件、11 個 chunks、324／542／831 input tokens 與 23.7／27.3／29.3 秒延遲來自本機實際命令；延遲只標為單次環境結果，不宣稱模型普遍效能。
+- [x] 沒有把第三方文件正文、模型輸出全文或外部程式碼放入 Repository；manifest 可由 raw 重建，Qwen tokenizer 只作為本機依賴使用。
+
+## Day 10 已完成
+
+- [x] `knowledge/retrieve.py`、SQLite FTS5 schema、CJK 搜尋欄位、BM25 顯示與 5 項測試由本專案依 Day 9 manifest 自行設計。
+- [x] 文章中的 5 份文件、11 個 chunks、`release owner` 的單筆命中與中文 `部署` 的 3 筆命中來自本機命令；BM25 只描述文字匹配，不宣稱回答品質。
+- [x] SQLite 索引是可重建衍生物；原始文件、manifest 與 chunk 文字保留在本專案，沒有納入第三方文件正文或外部程式碼。
+
 ## 每日發文前
 
 - [ ] 文章內容來自當天自己的實作、測試與失敗紀錄。

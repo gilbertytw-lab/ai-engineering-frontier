@@ -1,0 +1,4 @@
+interface:
+  display_name: "Source to Raw Markdown"
+  short_description: "Convert full files and pages to source-linked Markdown"
+  default_prompt: "Use $source-to-raw-md to convert this complete source into Markdown without a model."

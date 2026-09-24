@@ -2,14 +2,14 @@
 
 這是「AI Engineering 研究前線」30 天實作專案的工作 Repository。報名標題維持不變；本專案的實作目標是讓只使用過網頁對話式 AI 的讀者，逐步建立一套可以在自己電腦上執行的本地工程知識助理。
 
-目前進度：**Day 7／第一週 Chat Runner checkpoint**
+目前進度：**Day 11／從 raw 自動建立 wiki source catalog**
 
 ## 專案目標
 
 讀者最後可以：
 
 - 在本地呼叫一個 LLM。
-- 匯入自己的 Markdown 或文字文件。
+- 將自己的 Markdown、文字檔、有文字層的 PDF 或靜態網頁轉成帶來源欄位的 Markdown。
 - 由原始文件建立可重建的知識索引。
 - 在有限 context 預算內挑選少量證據。
 - 產生附來源的回答，找不到證據時明確拒答。
@@ -19,11 +19,15 @@
 ## 核心資料流
 
 ```text
-knowledge/raw
+原始檔案或網頁快照：knowledge/inbox
     ↓
-文件 metadata、hash、chunk
+source-to-raw-md：程式抽出完整文字、保留 PDF 頁碼並補上來源欄位
     ↓
-可讀的知識頁（選用）
+固定格式的 Markdown：knowledge/raw
+    ↓
+後續 ingest：文件版本與 chunk manifest
+    ↓
+可讀的知識頁（由 raw 自動建立 source catalog）
     ↓
 FTS／embedding retrieval
     ↓
@@ -34,7 +38,7 @@ Local LLM
 附來源回答、拒答與執行紀錄
 ```
 
-`raw` 是可追溯的原始資料；知識頁是人類可維護的整理層；索引與執行結果都是可以刪除後重建的衍生物。這個邊界是本專案依照「本地模型 context 珍貴」與「初學者可跟做」兩項需求做出的設計決定。
+`inbox` 保存原始檔案或網頁快照；`raw` 保存轉換後、帶來源欄位的 Markdown。Day 11 的 `knowledge/wiki.py` 會從 raw 自動建立可回查的 source catalog；使用者不需要手動替來源文件建立頁面或分類。chunk manifest、索引與執行結果由後續步驟建立。Chat Runner 尚未檢索或讀取這些文件。
 
 ## 明確不做的事
 
@@ -173,3 +177,53 @@ Day 7 checkpoint：PASS
 ```
 
 完整教學見 [Day 7 文章](articles/day07.md)，驗證範圍見 [Day 7 驗證紀錄](docs/day07-verification.md)。
+
+## Day 8
+
+第二週先建立來源轉換工作流。讀者把檔案放進 `knowledge/inbox/`，在終端機執行 `knowledge/convert.py`；程式逐份轉換、驗證，成功後把原檔移到 `knowledge/inbox/processed/`，將帶來源欄位的 Markdown 寫入 `knowledge/raw/`。五份虛構的 `harbor-api` 文件已按此流程處理。這一步不需要 Qwen 呼叫 skill；chunk manifest 與搜尋留待後續實作。PDF 的圖表、公式與雙欄順序仍要對照原檔。
+
+```bash
+uv run --with pypdf --with fonttools python knowledge/convert.py
+```
+
+完整教學見 [Day 8 文章](articles/day08.md)，驗證範圍見 [Day 8 驗證紀錄](docs/day08-verification.md)；轉換工具已另行發布於 [source-to-raw-md](https://github.com/gilbertytw-lab/source-to-raw-md)。
+
+## Day 9
+
+Day 9 將 `knowledge/raw/` 的 Markdown 以 Qwen tokenizer 分成帶來源位置的 chunks，建立可重建的 `knowledge/index/manifest.json`。目前設定每個 chunk 最多 160 tokens、重疊 24 tokens；本次五份示範文件產生 11 個 chunks。manifest 只保存衍生索引，raw 與 `inbox/processed/` 仍是可回查的來源。
+
+```bash
+HF_HUB_OFFLINE=1 uv run python knowledge/ingest.py \
+  --max-tokens 160 --overlap-tokens 24
+
+HF_HUB_OFFLINE=1 uv run python knowledge/measure.py \
+  --dry-run --evidence-tokens 160 320 640
+```
+
+要做真實延遲量測，先啟動 Day 2 的本地 runtime，再執行同一個 `knowledge/measure.py`，命令會記錄 Qwen 的 input tokens、證據 tokens、回答 token 估計值與耗時。固定 benchmark 只代表這台機器與這次模型快取的結果，不把單次數字當成通用效能保證。完整教學見 [Day 9 文章](articles/day09.md)，驗證範圍見 [Day 9 驗證紀錄](docs/day09-verification.md)。
+
+## Day 10
+
+Day 10 在 Day 9 的 chunk manifest 上加入第一條關鍵字檢索路徑。`knowledge/retrieve.py` 使用 Python 內建的 SQLite FTS5 建立可重建的 `knowledge/index/retrieval.sqlite`，以 BM25 排序候選 chunks，並保留來源檔名與 raw 行號。索引是衍生物，刪掉後可從 manifest 重建；今天沒有啟動 Qwen。
+
+```bash
+HF_HUB_OFFLINE=1 uv run python knowledge/ingest.py \
+  --max-tokens 160 --overlap-tokens 24
+
+uv run python knowledge/retrieve.py \
+  --query "release owner" --limit 5
+```
+
+完整教學見 [Day 10 文章](articles/day10.md)，驗證範圍見 [Day 10 驗證紀錄](docs/day10-verification.md)。
+
+## Day 11
+
+Day 11 新增 `knowledge/wiki.py`，從 `knowledge/raw/*.md` 自動建立 `knowledge/wiki/index.md` 和 5 個 source pages。每頁保留 `document_id`、來源檔名、raw 路徑、source snapshot、hash 與 converter 資訊，並連回原始 raw 文件。這一版不呼叫 Qwen、不複製 raw 正文，也不要求使用者手動分類文件。
+
+```bash
+uv run python knowledge/wiki.py
+
+uv run python -m unittest tests.test_day11_wiki -v
+```
+
+完整教學見 [Day 11 文章](articles/day11.md)，驗證範圍見 [Day 11 驗證紀錄](docs/day11-verification.md)。
