@@ -2,7 +2,7 @@
 
 這是「AI Engineering 研究前線」30 天實作專案的工作 Repository。報名標題維持不變；本專案的實作目標是讓只使用過網頁對話式 AI 的讀者，逐步建立一套可以在自己電腦上執行的本地工程知識助理。
 
-目前進度：**Day 11／從 raw 自動建立 wiki source catalog**
+目前進度：**Day 14／附來源回答、兩種拒答與本地 RAG checkpoint**
 
 ## 專案目標
 
@@ -227,3 +227,40 @@ uv run python -m unittest tests.test_day11_wiki -v
 ```
 
 完整教學見 [Day 11 文章](articles/day11.md)，驗證範圍見 [Day 11 驗證紀錄](docs/day11-verification.md)。
+
+## Day 12
+
+Day 12 比較 raw、wiki 和 hierarchical 三條證據路徑，確認 source catalog 適合導覽，最終回答仍需要回到 raw chunks。完整教學見 [Day 12 文章](articles/day12.md)。
+
+## Day 13
+
+Day 13 新增 `knowledge/context.py`，把 FTS5 候選依 BM25 排序，在固定的 context window 和 output reserve 內組裝 messages。同一份文件重疊行號的 chunks 只保留較前者，被淘汰的候選會保存原因；本日不呼叫 Qwen。
+
+```bash
+HF_HUB_OFFLINE=1 uv run python knowledge/context.py \
+  --query 'production release' \
+  --limit 5 \
+  --context-window 1024 \
+  --output-reserve 128
+
+uv run python -m unittest tests.test_day13_context -v
+```
+
+完整教學見 [Day 13 文章](articles/day13.md)，驗證範圍見 [Day 13 驗證紀錄](docs/day13-verification.md)。
+
+## Day 14
+
+Day 14 新增 `knowledge/rag.py`，從 manifest 重建 FTS5 索引，將 Day 13 的 bounded messages 交給本地 Qwen，檢查 `answer`、`citations` 和 `no_answer`。引用必須來自本次實際選入的 chunks，來源檔名與 raw 行號由程式查回；零命中直接拒答，有證據卻缺少答案時由模型回覆 `no_answer`。每次執行會在 `runs/` 附加 JSONL 紀錄。
+
+先啟動本地 runtime，再執行：
+
+```bash
+HF_HUB_OFFLINE=1 uv run python knowledge/rag.py \
+  --checkpoint \
+  --model mlx-community/Qwen3.8-27B-4bit \
+  --log runs/day14-checkpoint.jsonl
+
+uv run python -m unittest tests.test_day14_rag -v
+```
+
+本次三個固定案例通過，全專案 49 個測試通過；兩筆模型 request 的 input tokens 為 1,062 與 303。這份 checkpoint 只驗收少量固定案例，citation membership 檢查尚未保證逐句語意正確。完整教學見 [Day 14 文章](articles/day14.md)，實測數字與限制見 [Day 14 驗證紀錄](docs/day14-verification.md)。

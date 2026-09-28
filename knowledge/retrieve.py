@@ -8,6 +8,7 @@ import json
 import re
 import sqlite3
 import sys
+from contextlib import closing
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -99,7 +100,7 @@ def build_index(manifest_path: Path, database_path: Path) -> dict[str, Any]:
     chunks = list(iter_chunks(manifest))
     database_path.parent.mkdir(parents=True, exist_ok=True)
 
-    with sqlite3.connect(database_path) as connection:
+    with closing(sqlite3.connect(database_path)) as connection, connection:
         _create_schema(connection)
         connection.executemany(
             """
@@ -168,7 +169,7 @@ def search(database_path: Path, query: str, *, limit: int = 5) -> list[dict[str,
     if limit <= 0:
         raise ValueError("limit 必須大於 0")
     match_query = _match_query(query)
-    with sqlite3.connect(database_path) as connection:
+    with closing(sqlite3.connect(database_path)) as connection:
         connection.row_factory = sqlite3.Row
         rows = connection.execute(
             """

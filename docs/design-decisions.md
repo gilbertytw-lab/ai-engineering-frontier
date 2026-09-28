@@ -155,3 +155,24 @@
 - 日期：2026-09-25
 - 決策：`knowledge/wiki.py` 從 `knowledge/raw/*.md` 自動建立 `knowledge/wiki/index.md` 與 `knowledge/wiki/sources/*.md`。source page 保存 raw 路徑、來源 snapshot、文件 ID、hash 和 converter 資訊；不複製 raw 正文，也不要求使用者替文件選擇 `source`、`concept`、`howto` 或 `derived` 類型。
 - 理由：每次匯入文件都要求使用者手動建立和分類頁面，會把知識頁變成另一份輸入資料。先自動建立可回查的 source catalog，才能驗證 wiki 導覽層的價值；跨文件的 concept、howto 和 derived 頁面留到有明確內容時再加入。
+
+## D023：Day 13 以完整 message token 計算 context budget
+
+- 狀態：accepted
+- 日期：2026-09-25
+- 決策：`knowledge/context.py` 在 FTS5 候選和 Local LLM 之間加入 bounded context builder。它先扣除 system prompt、問題、history、tool schema 和 output reserve，再依 BM25 排序選入完整 chunks；同一文件的重疊行號只保留排名較前者，所有淘汰原因都寫入結果。
+- 理由：只加總 raw chunk 的 token 數會漏掉 chat template、來源標頭和未來工具／歷史的成本。先以同一個 tokenizer 計算實際 messages，才能在不擴大 context 的情況下知道證據可用空間，也才能診斷候選是被重複內容或預算淘汰。
+
+## D024：Day 14 引用必須來自本次實際送入模型的 chunks
+
+- 狀態：accepted
+- 日期：2026-09-28
+- 決策：`knowledge/rag.py` 將完整 bounded messages 送到本地 Qwen，驗證 `answer`、`citations`、`no_answer`；citation allowlist 只包含本次 selected chunks，來源檔名與 raw 行號由程式查回。只有 `finish_reason=stop` 才接受回覆，失敗保留完整 runtime 回應。token 計算與 request 都使用 `enable_thinking=false`。
+- 理由：資料庫中存在某個 chunk，不代表模型這一輪看過它；讓模型產生來源位置也會新增可避免的錯誤。引用存在性、回答格式與完整生成可以由程式檢查，逐句語意支持仍需要另行驗證。
+
+## D025：Day 14 將兩種拒答分開記錄，以少量固定案例驗收
+
+- 狀態：accepted
+- 日期：2026-09-28
+- 決策：每次啟動 RAG 從 manifest 重建 FTS5；沒有選入證據時程式直接拒答，有證據但缺少答案時由模型回覆 `no_answer=true`、空引用。checkpoint 固定驗收跨文件數值、模型拒答與零命中三種情況，記錄 tokens、model_called、耗時與完整 context，結果 append 到已排除 Git 的 `runs/`。
+- 理由：重建適合目前五份示範文件，能避免使用舊索引。分開拒答來源才能知道是不是模型真的判斷資料不足；三個固定案例只驗收目前資料流，不當成整體品質或安全保證。

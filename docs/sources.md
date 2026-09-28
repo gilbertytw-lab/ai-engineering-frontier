@@ -137,3 +137,21 @@ Day 1 沒有把外部文章、程式碼、圖片或範例資料放入 Repository
 - 用途：核對 FTS5 virtual table、MATCH 查詢與 `bm25()` ranking function 的介面與排序行為。
 - 使用範圍：`knowledge/retrieve.py` 以 Python `sqlite3` 重新組合本專案的 chunk index、查詢和來源欄位；沒有複製文件程式碼或文章內容。
 - 是否包含程式碼、文字或圖片：否
+
+## Day 14 本地 RAG
+
+### S016：Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks
+
+- URL：https://arxiv.org/abs/2005.11401
+- 存取日期：2026-09-28
+- 用途：核對 RAG 結合外部檢索與語言生成的研究出處。
+- 使用範圍：文章以自己的文字簡短說明概念；本專案採 FTS5 與本地 Qwen 的問答流程，沒有複製論文的 dense retriever、模型訓練、程式碼或數據。
+- 是否包含程式碼、文字或圖片：否；只有連結與概念改述。
+
+### S017：MLX-LM server 官方文件
+
+- URL：https://github.com/ml-explore/mlx-lm/blob/main/mlx_lm/SERVER.md
+- 存取日期：2026-09-28
+- 用途：核對 `/v1/chat/completions`、messages、max_tokens、`finish_reason=stop|length` 與 usage 欄位。
+- 使用範圍：只用官方文件核對介面；本地測試使用 0.31.3，數字與模型行為由實測確認，不將線上 main 的全部功能推定為本機版本支援。
+- 是否包含程式碼、文字或圖片：否；請求程式與文章獨立撰寫。

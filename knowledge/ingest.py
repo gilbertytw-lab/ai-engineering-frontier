@@ -39,7 +39,9 @@ class LinePiece:
 class Tokenizer:
     """Small wrapper so ingest and measurement use exactly the same counter."""
 
-    def __init__(self, name: str) -> None:
+    def __init__(
+        self, name: str, *, chat_template_kwargs: dict[str, Any] | None = None
+    ) -> None:
         try:
             from transformers import AutoTokenizer
         except ImportError as error:  # pragma: no cover - environment failure
@@ -60,6 +62,7 @@ class Tokenizer:
                 "本命令不會自動下載模型，請確認快取或用 --tokenizer 指定路徑。"
             ) from error
         self.name = name
+        self.chat_template_kwargs = dict(chat_template_kwargs or {})
 
     def encode(self, text: str) -> list[int]:
         return list(self._tokenizer.encode(text, add_special_tokens=False))
@@ -73,6 +76,7 @@ class Tokenizer:
                 messages,
                 tokenize=True,
                 add_generation_prompt=True,
+                **self.chat_template_kwargs,
             )
             if hasattr(encoded, "get") and encoded.get("input_ids") is not None:
                 input_ids = encoded["input_ids"]
