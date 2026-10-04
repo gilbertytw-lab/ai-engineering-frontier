@@ -176,3 +176,24 @@
 - 日期：2026-09-28
 - 決策：每次啟動 RAG 從 manifest 重建 FTS5；沒有選入證據時程式直接拒答，有證據但缺少答案時由模型回覆 `no_answer=true`、空引用。checkpoint 固定驗收跨文件數值、模型拒答與零命中三種情況，記錄 tokens、model_called、耗時與完整 context，結果 append 到已排除 Git 的 `runs/`。
 - 理由：重建適合目前五份示範文件，能避免使用舊索引。分開拒答來源才能知道是不是模型真的判斷資料不足；三個固定案例只驗收目前資料流，不當成整體品質或安全保證。
+
+## D026：Day 15 使用 MLX-LM 原生 tool call 與單一唯讀 allowlist
+
+- 狀態：accepted
+- 日期：2026-09-29
+- 決策：`knowledge/tools.py` 透過 chat completion 的 `tools` schema 提供 `list_sources`，只讀固定 manifest，回傳來源名稱與 document ID。Python dispatcher 重新驗證函式名稱、JSON arguments 與精確欄位；單回合最多執行一個工具，最多進行兩次模型呼叫。
+- 理由：模型負責提出工具請求，程式掌握可執行函式與資料範圍。把路徑留在程式端、回傳最少必要 metadata，並限制呼叫次數，可驗證完整 round-trip，同時避免把模型輸出當成可直接執行的程式或檔案位置。
+
+## D027：Day 16 以 document ID 讀取有上限的唯讀證據
+
+- 狀態：accepted
+- 日期：2026-09-30
+- 決策：`get_document_chunks` 只接受 `document_id`，從固定的 chunk manifest 取回至多 3 個 chunks，保留來源名稱、chunk ID、raw 行號、token 數與文字。單回合仍最多執行一個工具；文件內容送回模型時以 system prompt 提醒它是待分析資料，不是可遵循的指令。
+- 理由：Day 15 的來源清單能提供 document ID，卻沒有內容證據。直接用 ID 查固定 manifest 可以展示從 metadata 到證據的下一步，同時不把任意路徑交給模型。回傳上限避免一次把整份文件送回；若超過上限，工具明確標記截斷。Prompt 提醒只能降低誤用機會，不是安全邊界。
+
+## D028：網頁來源只在使用者選定後匯入
+
+- 狀態：accepted
+- 日期：2026-10-01
+- 決策：Day 17 的 `web_search` 最多回傳 5 筆候選，不保存搜尋摘要到知識庫。使用者在下一輪明確選定候選 ID 後，`import_web_source` 才能下載該來源、保存原始快照到 `knowledge/inbox/`、呼叫既有 converter 產生 `raw/`，並重建 manifest 與 FTS5 index。匯入工具拒絕任意 URL、路徑、未選來源與非公開 IP。
+- 理由：網路資料可以補足本地知識缺口，但搜尋排名不能代表使用者同意把來源納入長期知識庫。分開搜尋與匯入，能保留使用者的來源選擇，也讓每份 raw 都能回到原網址與保存的原始快照。

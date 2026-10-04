@@ -10,6 +10,8 @@ uv run --with pypdf --with fonttools python knowledge/convert.py
 
 It processes supported files, verifies each raw result, and moves successful originals to `knowledge/inbox/processed/`. It skips that folder on later runs. Failed and unsupported files stay in the pending `inbox/` area. This Day 8 command does not require Qwen or a model tool-calling interface. `knowledge/convert.py` is a thin project entrypoint to this skill's `scripts/batch.py`.
 
+Day 17's `import_web_source` tool calls `batch.convert_selected_source()` after the user selects a search result. It processes only that pending snapshot, preserves its `.source.json` provenance sidecar, writes and validates the corresponding raw Markdown, then the caller rebuilds the manifest and FTS5 index. The sidecar records the source URL, display title, and charset without modifying the downloaded page bytes.
+
 ## Requirements
 
 - Python 3.13+

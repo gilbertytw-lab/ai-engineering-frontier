@@ -184,7 +184,30 @@ def read_source(source_arg: str) -> Source:
     if path.stat().st_size > MAX_SOURCE_BYTES:
         raise ValueError("來源超過 100 MiB 的檔案安全上限")
     kind, format_name = formats[suffix]
-    return Source(path.read_bytes(), path.name, kind, format_name, suffix)
+    sidecar = path.with_name(path.name + ".source.json")
+    source_name = path.name
+    charset = "utf-8"
+    source_url = None
+    if sidecar.is_file():
+        try:
+            metadata = json.loads(sidecar.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as error:
+            raise ValueError(f"來源中繼資料無法讀取：{sidecar}") from error
+        if not isinstance(metadata, dict) or set(metadata) - {"source_url", "source_name", "charset"}:
+            raise ValueError("來源中繼資料欄位不符合格式")
+        candidate_url = metadata.get("source_url")
+        if not isinstance(candidate_url, str) or urlsplit(candidate_url).scheme not in {"http", "https"}:
+            raise ValueError("來源中繼資料缺少有效的 HTTP/HTTPS source_url")
+        source_url = candidate_url
+        candidate_name = metadata.get("source_name", path.name)
+        candidate_charset = metadata.get("charset", "utf-8")
+        if not isinstance(candidate_name, str) or not candidate_name.strip():
+            raise ValueError("來源中繼資料的 source_name 必須是非空字串")
+        if not isinstance(candidate_charset, str) or not candidate_charset.strip():
+            raise ValueError("來源中繼資料的 charset 必須是非空字串")
+        source_name = candidate_name
+        charset = candidate_charset
+    return Source(path.read_bytes(), source_name, kind, format_name, suffix, charset, source_url)
 
 
 def document_id(source: Source, extracted_text: str) -> str:
@@ -251,7 +274,8 @@ def extract(source: Source) -> Extraction:
 def snapshot_source(source_arg: str, source: Source, source_dir: Path, doc_id: str) -> Path:
     source_dir = source_dir.resolve()
     source_dir.mkdir(parents=True, exist_ok=True)
-    input_path = Path(source_arg).expanduser().resolve() if not source.url else None
+    source_argument_is_url = urlsplit(source_arg).scheme in {"http", "https"}
+    input_path = Path(source_arg).expanduser().resolve() if not source_argument_is_url else None
     if input_path and input_path.is_relative_to(source_dir):
         return input_path
     filename = f"{doc_id}-{hashlib.sha256(source.data).hexdigest()[:12]}{source.suffix}" if source.url else f"{doc_id}-{Path(source_arg).name}"

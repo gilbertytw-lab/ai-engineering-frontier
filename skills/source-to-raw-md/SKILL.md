@@ -5,7 +5,7 @@ description: Convert whole text files, text-layer PDFs, and static web pages int
 
 # Source to Raw Markdown
 
-In the AI Engineering Frontier project, Day 8 uses the terminal entrypoint `knowledge/convert.py`. Put original `.txt`, `.md`, `.markdown`, `.pdf`, `.html`, or `.htm` files in `knowledge/inbox/`, then run the Python file. It converts every supported file to fixed-format Markdown in `knowledge/raw/`, validates each result, and moves successfully processed originals to `knowledge/inbox/processed/`. Failed and unsupported files remain in the pending area. The Chat Runner does not call this skill yet; the reader runs the command directly. No Qwen or other model is used for conversion.
+In the AI Engineering Frontier project, Day 8 uses the terminal entrypoint `knowledge/convert.py`. Put original `.txt`, `.md`, `.markdown`, `.pdf`, `.html`, or `.htm` files in `knowledge/inbox/`, then run the Python file. It converts every supported file to fixed-format Markdown in `knowledge/raw/`, validates each result, and moves successfully processed originals to `knowledge/inbox/processed/`. Failed and unsupported files remain in the pending area. Day 17's user-approved web import calls `batch.convert_selected_source()` for exactly one selected inbox file and then rebuilds the knowledge index. No Qwen or other model is used for conversion.
 
 The bundled `scripts/convert.py` remains a reusable one-source CLI, including an HTTP/HTTPS URL path for other projects. Files larger than 100 MiB are refused as a file safety limit; there is no model context or extracted-text length limit.
 
@@ -18,6 +18,8 @@ uv run --with pypdf --with fonttools python knowledge/convert.py
 ```
 
 The command scans `knowledge/inbox/` recursively except `processed/`, reports unsupported formats and per-file failures, and can be run again after adding sources. Moving the originals out of the pending area prevents the next run from converting them again. Raw files point to the archived original through `source_snapshot`. The project entrypoint calls this skill's `scripts/batch.py`.
+
+Day 17 can attach a sibling `<filename>.source.json` sidecar to a fetched source. It contains `source_url`, `source_name`, and `charset`; the batch converter moves it with the original, and the raw frontmatter keeps the URL and title. The downloaded source bytes remain unchanged. Local source files without a sidecar follow the Day 8 behavior.
 
 For another project with a `knowledge/inbox/` directory, run the bundled batch script directly:
 

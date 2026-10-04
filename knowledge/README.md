@@ -52,3 +52,43 @@ HF_HUB_OFFLINE=1 uv run python knowledge/rag.py \
 加上 `--dry-run` 可先檢查選入證據與 tokens，省略時需要已啟動本地 runtime。用 `--checkpoint` 可跑三個固定案例；命令與實測見 [Day 14 驗證紀錄](../docs/day14-verification.md)。
 
 這五份示範文件不含真實公司資料、秘密或個人資料。`incident-runbook.md` 裡的英文指令句是刻意加入的測試資料，不是系統指令。
+
+## Day 15：唯讀工具呼叫
+
+Day 15 的 `list_sources` 只讀 `index/manifest.json`，回傳來源檔名和 document ID；當時不讀正文、不接受路徑參數，也不寫入檔案。Python 會檢查工具名稱與參數，並限制每回合最多執行一個工具。
+
+啟動本地 runtime 後，可執行兩個模型選擇案例：
+
+```bash
+HF_HUB_OFFLINE=1 uv run python knowledge/tools.py --checkpoint
+```
+
+一題要求篩選 `deployment` 來源，另一題是簡單算術，檢查模型是否會在不需要工具時直接回答。程式限制的單元測試與實測紀錄見 [Day 15 驗證紀錄](../docs/day15-verification.md)。
+
+## Day 16：依文件 ID 讀取片段
+
+`tools.py` 新增 `get_document_chunks`，從 `index/manifest.json` 依完全相符的 document ID 取回內容。每次最多提供 3 個 chunks，每個 chunk 保留 ID、raw 行號、token 數和文字；回應也會標示實際回傳數量與是否截斷。工具只讀 manifest，不接受路徑或檔案名稱參數，也不會修改檔案。
+
+```bash
+HF_HUB_OFFLINE=1 uv run python knowledge/tools.py --checkpoint
+uv run python -m unittest tests.test_day16_tools -v
+```
+
+單回合最多執行一個工具，因此目前要先知道 document ID；`list_sources` 列出 ID 後，需另開一回合讀取片段。`get_document_chunks` 會把文件內容當待分析資料，提示模型不要遵循內容中的操作要求；這段 prompt 提示本身不構成安全保證。驗證紀錄見 [Day 16 驗證紀錄](../docs/day16-verification.md)。
+
+## Day 17：搜尋並匯入使用者選定的網頁來源
+
+`tools.py` 新增 `web_search` 與 `import_web_source`。前者回傳最多 5 筆搜尋候選，並把候選 ID 暫存在被 Git 忽略的 `runs/day17-web-search.json`。它不下載頁面、不寫入知識庫。下一輪只有在使用者明確選定候選（例如「我選第 2 筆，請匯入」）時，模型才能用 `import_web_source` 指定 `web-2`。
+
+匯入工具只會讀取最近一次搜尋產生的 ID，不接受任意 URL 或檔案路徑。程式以 HTTP/HTTPS 擷取所選頁面，拒絕本機／內部 IP、超過 20 MiB 的來源和不支援的內容格式；原始快照與網址、標題、中繼資料存入 `inbox/`，再交給 `source-to-raw-md` 的既有 batch converter，完成後原件會移到 `inbox/processed/`，標準化 Markdown 寫入 `raw/`。接著重建 manifest 和 SQLite FTS5 索引，讓新來源可以被本地檢索使用。
+
+目前預設搜尋端點是 DuckDuckGo Lite。若服務要求人工驗證或解析不到結果，工具會回報失敗，不會自動匯入搜尋摘要。只支援靜態 HTML、文字和 PDF；JavaScript-only 網頁或沒有可抽取文字的 PDF 會留在待處理區。
+
+啟動本地 runtime 後，`--checkpoint` 會驗證模型是否選對工具、Python 是否回傳檢查結果：
+
+```bash
+HF_HUB_OFFLINE=1 uv run python knowledge/tools.py --checkpoint
+uv run python -m unittest tests.test_day17_tools -v
+```
+
+搜尋結果與使用者選取必須分成不同回合；每回合仍最多執行一個工具。文章見 [Day 17](../articles/day17.md)，實測細節見 [Day 17 驗證紀錄](../docs/day17-verification.md)。

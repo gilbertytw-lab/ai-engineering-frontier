@@ -148,6 +148,8 @@ Local LLM
 回答、引用、log
 ```
 
+本地證據不足時，助理可以另開網路搜尋回合，將最多 5 筆候選來源交給使用者挑選。只有使用者明確選定的來源會被抓取到 `inbox/`，再轉成 `raw/` 並重建 manifest 與 FTS 索引；搜尋摘要不會直接成為知識庫證據。
+
 可用 context 預算應明確計算：
 
 ```text
@@ -289,10 +291,10 @@ client.chat(messages, tools=None, response_format=None)
 
 | Day | 文章主題 | 當日可見成果 | Git 產出 |
 |---:|---|---|---|
-| 15 | 知道答案與執行動作的差別 | Tool schema 概念 | `day15: add tool schema` |
-| 16 | 第一個工具：文件目錄查詢 | 唯讀、無副作用工具 | `day16: add document catalog tool` |
-| 17 | 第二個工具：設定檢查 | 只讀取允許資料與回傳檢查結果 | `day17: add config check tool` |
-| 18 | AI 如何選擇工具？ | tool router | `day18: add tool routing` |
+| 15 | 知道答案與執行動作的差別 | MLX-LM tool schema、單一唯讀工具與模型呼叫 checkpoint | `day15: add tool schema` |
+| 16 | 第一個內容工具：查詢文件片段 | 依文件 ID 取得受限的唯讀證據 | `day16: add document lookup tool` |
+| 17 | 本地查無資料時搜尋網路來源 | 搜尋候選、等使用者選定，再保存 inbox 快照、轉 raw 並更新索引 | `day17: add user-approved web import` |
+| 18 | 模型選工具準不準？ | 建立 10 題路由案例，記錄 Qwen 首次選擇的工具／不呼叫工具、命中率、誤呼叫與漏呼叫；路由評估只記錄選擇，不執行工具 | `day18: measure tool routing` |
 | 19 | 工具叫錯怎麼辦？ | argument validation 與錯誤訊息 | `day19: validate tool calls` |
 | 20 | MCP 解決了什麼問題？ | 直接工具與 MCP 的小比較 | `day20: optional mcp adapter` |
 | 21 | 第三週回顧：安全工具層 | 可重複執行的 tool checkpoint | `day21: checkpoint-tools` |
@@ -310,7 +312,7 @@ Day 20 的 MCP 是 optional。即使跳過，讀者仍然能完成後續 Agent �
 | 26 | 記憶先從 Session State 開始 | 可重設的短期記憶 | `day26: add session state` |
 | 27 | Prompt Injection 與安全邊界 | 不信任文件、工具與輸入 | `day27: add safety checks` |
 
-這一週不做多 Agent、不開放 shell、不讓模型自行修改檔案。Agent 的預設工具必須是唯讀，最多 3 步，並且每一步都留下 log。第一版每個任務先限制為一次 Qwen 判斷，其餘參數檢查、工具執行與結果驗證由程式處理；增加模型回合前要先量測整段任務延遲。
+這一週不做多 Agent、不開放 shell、不讓模型自行修改檔案。Agent 的預設工具必須是唯讀，最多 3 步，並且每一步都留下 log。第一版每個任務先限制為一次 Qwen 判斷，其餘參數檢查、工具執行與結果驗證由程式處理；增加模型回合前要先量測整段任務延遲。Day 17 的來源匯入是唯一受限寫入例外：只能匯入使用者在前一回合選定的搜尋結果，不能讓模型自行選路徑或改寫檔案。
 
 ### Week 5：評估、包裝與交付
 

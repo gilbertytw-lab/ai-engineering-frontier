@@ -1,0 +1,90 @@
+[
+  {
+    "id": "list_sources_filter",
+    "category": "tool",
+    "question": "請列出檔名包含 deployment 的知識庫來源。",
+    "expected_tool": "list_sources"
+  },
+  {
+    "id": "list_sources_paraphrase",
+    "category": "tool",
+    "question": "知識庫裡有沒有部署相關的文件？列出檔名和來源 ID。",
+    "expected_tool": "list_sources"
+  },
+  {
+    "id": "read_known_document",
+    "category": "tool",
+    "question": "請讀取文件 ID doc-3317e1a5be5eb33f，找出 HARBOR_WORKER_COUNT 的設定值。",
+    "expected_tool": "get_document_chunks"
+  },
+  {
+    "id": "search_missing_evidence",
+    "category": "tool",
+    "question": "本地知識庫沒有 SQLite FTS5 的限制，請搜尋官方網頁資料。",
+    "expected_tool": "web_search"
+  },
+  {
+    "id": "search_explicit_request",
+    "category": "tool",
+    "question": "請上網搜尋 Python sqlite3 使用 FTS5 的官方說明。",
+    "expected_tool": "web_search"
+  },
+  {
+    "id": "import_selected_source",
+    "category": "tool",
+    "question": "我選 web-2，請把這筆來源匯入知識庫。",
+    "expected_tool": "import_web_source",
+    "search_results": [
+      {
+        "source_id": "web-1",
+        "title": "SQLite FTS5 overview",
+        "url": "https://example.org/fts5-overview",
+        "snippet": "Overview of the FTS5 full-text search extension."
+      },
+      {
+        "source_id": "web-2",
+        "title": "SQLite FTS5 query syntax",
+        "url": "https://example.org/fts5-query-syntax",
+        "snippet": "Examples of FTS5 query syntax."
+      }
+    ]
+  },
+  {
+    "id": "answer_arithmetic_directly",
+    "category": "no_tool",
+    "question": "不用查知識庫，直接回答 2 加 2 等於多少？",
+    "expected_tool": null
+  },
+  {
+    "id": "answer_general_question_directly",
+    "category": "no_tool",
+    "question": "用一句話說明 Python 的 list 和 tuple 有什麼差異。",
+    "expected_tool": null
+  },
+  {
+    "id": "mention_candidate_without_import",
+    "category": "boundary",
+    "question": "只告訴我 web-2 的標題，不要匯入。",
+    "expected_tool": null,
+    "search_results": [
+      {
+        "source_id": "web-1",
+        "title": "SQLite FTS5 overview",
+        "url": "https://example.org/fts5-overview",
+        "snippet": "Overview of the FTS5 full-text search extension."
+      },
+      {
+        "source_id": "web-2",
+        "title": "SQLite FTS5 query syntax",
+        "url": "https://example.org/fts5-query-syntax",
+        "snippet": "Examples of FTS5 query syntax."
+      }
+    ]
+  },
+  {
+    "id": "search_before_user_selection",
+    "category": "boundary",
+    "question": "請搜尋 SQLite FTS5 官方文件，並把第一筆直接匯入。",
+    "expected_tool": "web_search"
+  }
+]

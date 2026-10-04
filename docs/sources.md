@@ -155,3 +155,73 @@ Day 1 沒有把外部文章、程式碼、圖片或範例資料放入 Repository
 - 用途：核對 `/v1/chat/completions`、messages、max_tokens、`finish_reason=stop|length` 與 usage 欄位。
 - 使用範圍：只用官方文件核對介面；本地測試使用 0.31.3，數字與模型行為由實測確認，不將線上 main 的全部功能推定為本機版本支援。
 - 是否包含程式碼、文字或圖片：否；請求程式與文章獨立撰寫。
+
+## Day 15 工具結構描述
+
+### S018：OpenAI function calling 官方文件
+
+- URL：https://developers.openai.com/api/docs/guides/function-calling
+- 存取日期：2026-09-29
+- 用途：核對工具 schema 的欄位概念，以及模型提出工具呼叫後由應用程式執行、再回傳工具結果的多步驟流程。
+- 使用範圍：Day 15 以自撰的 `list_sources` JSON 範例說明工具契約與多步驟流程；實際 runtime 支援狀況另以 MLX-LM 本機套件程式和 live test 核對。
+- 是否包含程式碼、文字或圖片：否；範例由本專案自行設計。
+
+### S019：MLX-LM 0.31.3 server 文件
+
+- URL：https://github.com/ml-explore/mlx-lm/blob/v0.31.3/mlx_lm/SERVER.md
+- 存取日期：2026-09-29
+- 用途：核對專案所用版本的 chat completion 請求欄位與回應格式。
+- 使用範圍：Day 15 核對 request fields 清單未列出 `tools`；支援狀況則對照安裝程式與 Qwen tokenizer，並以真實請求驗證。
+- 是否包含程式碼、文字或圖片：否。
+
+### S020：MLX-LM 0.31.3 server 實作
+
+- URL：https://github.com/ml-explore/mlx-lm/blob/v0.31.3/mlx_lm/server.py
+- 存取日期：2026-09-29
+- 用途：核對本機安裝版本會從 chat completion request 讀取 `tools`，並將解析出的 tool call 放入回應。
+- 使用範圍：與本機 Qwen live test 一起確認此版本可執行本文的工具呼叫流程。
+- 是否包含程式碼、文字或圖片：否；只檢視實作行為，未複製程式碼。
+
+### S021：MLX-LM 0.31.3 tokenizer 工具呼叫解析
+
+- URL：https://github.com/ml-explore/mlx-lm/blob/v0.31.3/mlx_lm/tokenizer_utils.py
+- 存取日期：2026-09-29
+- 用途：核對 MLX-LM 從 chat template 判斷 tokenizer 是否支援 tool calling 的方式。
+- 使用範圍：確認本機 Qwen tokenizer 回報支援工具呼叫；另外以 end-to-end request 驗證，沒有只依賴靜態判斷。
+- 是否包含程式碼、文字或圖片：否；只檢視實作行為，未複製程式碼。
+
+## Day 17 網路搜尋與使用者選擇匯入
+
+### S022：DuckDuckGo Lite 搜尋頁
+
+- URL：https://lite.duckduckgo.com/lite/
+- 存取日期：2026-10-01
+- 用途：提供 `web_search` 的網頁搜尋候選。
+- 使用範圍：程式只取最多 5 筆結果的標題、網址與摘要；摘要不會直接進入 `raw/`，匯入必須等使用者另開一輪明確選定來源。
+- 是否包含程式碼、文字或圖片：否；搜尋服務回傳內容只作為執行期候選，不複製到 Repository。
+
+## Day 20 MCP 架構比較
+
+### S023：MCP 官方入門文件
+
+- URL：https://modelcontextprotocol.io/docs/2026-07-28/getting-started/intro
+- 存取日期：2026-10-03
+- 用途：確認 MCP 作為 AI 應用程式連接外部系統的開放協定，以及官方說明的適用範圍。
+- 使用範圍：Day 20 以自己的文字整理 MCP 的定位；沒有複製文件段落、程式碼或專案結構。
+- 是否包含程式碼、文字或圖片：否。
+
+### S024：MCP 官方架構概覽
+
+- URL：https://modelcontextprotocol.io/docs/2026-07-28/learn/architecture
+- 存取日期：2026-10-03
+- 用途：核對 host、client、server 的角色，以及 `tools/list`、`tools/call` 等工具探索與執行流程。
+- 使用範圍：Day 20 將官方架構與本專案現有 dispatcher 流程對照；沒有複製文件範例或程式碼。
+- 是否包含程式碼、文字或圖片：否。
+
+### S025：MCP 官方伺服器概念文件
+
+- URL：https://modelcontextprotocol.io/docs/2026-07-28/learn/server-concepts
+- 存取日期：2026-10-03
+- 用途：核對 MCP server 可提供的 tools、resources 與 prompts，以及工具介面的探索與呼叫方式。
+- 使用範圍：Day 20 以自己的文字說明這些介面；沒有複製文件段落或程式碼。
+- 是否包含程式碼、文字或圖片：否。

@@ -2,7 +2,7 @@
 
 這是「AI Engineering 研究前線」30 天實作專案的工作 Repository。報名標題維持不變；本專案的實作目標是讓只使用過網頁對話式 AI 的讀者，逐步建立一套可以在自己電腦上執行的本地工程知識助理。
 
-目前進度：**Day 14／附來源回答、兩種拒答與本地 RAG checkpoint**
+目前進度：**Day 20／完成工具參數驗證與 MCP 架構比較**
 
 ## 專案目標
 
@@ -13,7 +13,7 @@
 - 由原始文件建立可重建的知識索引。
 - 在有限 context 預算內挑選少量證據。
 - 產生附來源的回答，找不到證據時明確拒答。
-- 使用受限制的唯讀功能完成簡單知識任務。
+- 使用受限制的工具查詢知識，並在明確選擇後匯入新來源。
 - 透過固定 benchmark 觀察品質、token 與效能變化。
 
 ## 核心資料流
@@ -264,3 +264,70 @@ uv run python -m unittest tests.test_day14_rag -v
 ```
 
 本次三個固定案例通過，全專案 49 個測試通過；兩筆模型 request 的 input tokens 為 1,062 與 303。這份 checkpoint 只驗收少量固定案例，citation membership 檢查尚未保證逐句語意正確。完整教學見 [Day 14 文章](articles/day14.md)，實測數字與限制見 [Day 14 驗證紀錄](docs/day14-verification.md)。
+
+## Day 15
+
+`knowledge/tools.py` 把 `list_sources` schema 傳給本地 Qwen。模型需要列來源時會提出工具呼叫；Python 只接受允許清單內的唯讀函式，驗證 `name_contains` 後讀固定 manifest，再把來源名稱與 document ID 交回模型。每回合最多執行一個工具和發出兩次模型 request。
+
+先啟動 Day 14 使用的本地 runtime，再執行：
+
+```bash
+HF_HUB_OFFLINE=1 uv run python knowledge/tools.py --checkpoint
+uv run python -m unittest tests.test_day15_tools -v
+```
+
+真實 Qwen 的「需要查工具」與「不需工具」兩個案例通過；Day 15 的 11 個單元測試及全專案 60 個測試通過。完整操作、輸出與限制見 [Day 15 文章](articles/day15.md)和[驗證紀錄](docs/day15-verification.md)。
+
+## Day 16
+
+`knowledge/tools.py` 新增 `get_document_chunks`。Python 只依 `document_id` 從固定的 `knowledge/index/manifest.json` 取回內容，不接受路徑；每次最多回傳 3 個 chunks，並附上來源名稱、chunk ID 與 raw 行號。文件超過上限時，結果會標記 `truncated`。
+
+先啟動本地 runtime，再執行：
+
+```bash
+HF_HUB_OFFLINE=1 uv run python knowledge/tools.py --checkpoint
+uv run python -m unittest tests.test_day16_tools -v
+```
+
+本地 Qwen 的來源清單、文件片段查詢與不需工具三個案例都通過；Day 16 的 7 個單元測試及全專案 67 個測試通過。單回合仍最多執行一個工具，因此列來源與讀取內容要分成兩次操作。完整內容與限制見 [Day 16 文章](articles/day16.md)和[驗證紀錄](docs/day16-verification.md)。
+
+## Day 17
+
+Day 17 新增 `web_search` 與 `import_web_source`。本地資料不足時，模型可以用 `web_search` 搜尋最多 5 筆候選來源；搜尋只回傳標題、網址和摘要，不會下載或匯入。使用者在下一輪明確選定來源 ID（例如 `web-2`）後，模型才會呼叫 `import_web_source`：程式保存網頁快照到 `knowledge/inbox/`，呼叫既有轉換器寫入 `knowledge/raw/`，再重建 chunk manifest 和 FTS5 索引。
+
+匯入工具只接受最近一次搜尋的來源 ID，不接受任意 URL 或路徑。程式會拒絕未明確選取的匯入呼叫、限制回傳筆數和下載大小，並拒絕解析到本機或內部 IP 的網址。來源頁面可能包含提示注入文字，模型只把它當資料處理。搜尋服務若要求人工驗證，工具會回報沒有取得結果，不會猜測來源。
+
+啟動本地 runtime 後執行工具 checkpoint：
+
+```bash
+HF_HUB_OFFLINE=1 uv run python knowledge/tools.py --checkpoint
+uv run python -m unittest tests.test_day17_tools -v
+```
+
+完整流程見 [Day 17 文章](articles/day17.md)，測試範圍與服務限制見 [Day 17 驗證紀錄](docs/day17-verification.md)。
+
+## Day 18
+
+Day 18 用 10 題固定案例量測 Qwen 的首次工具選擇。評估器只讀取模型選擇的工具名稱或直接回答，不執行搜尋、文件讀取或匯入。這次 10 題全數符合預期；結果只代表這組人工案例，不是一般化準確率。
+
+```bash
+HF_HUB_OFFLINE=1 uv run python knowledge/evaluate_routing.py
+```
+
+案例、完整文章與評估限制見 [Day 18 文章](articles/day18.md)及[驗證紀錄](docs/day18-verification.md)。
+
+## Day 19
+
+Day 19 在工具 dispatcher 加上嚴格的 `arguments` 驗證：要求 JSON object、拒絕重複欄位和額外參數，並檢查型別、空值與長度。網頁來源匯入還要通過目前回合的使用者選取檢查。相關拒絕路徑可用下列單元測試重跑：
+
+```bash
+uv run python -m unittest tests.test_day15_tools tests.test_day16_tools tests.test_day17_tools -v
+```
+
+完整說明見 [Day 19 文章](articles/day19.md)。
+
+## Day 20
+
+Day 20 比較應用程式直接呼叫 Python 工具函式，與透過 MCP client/server 探索和執行工具的差異。目前專案只有一個本地 AI 助理；MCP adapter 仍是選配，文章依現有程式與官方文件整理架構比較，沒有新增 MCP client 或 server。
+
+完整說明與官方來源見 [Day 20 文章](articles/day20.md)。
