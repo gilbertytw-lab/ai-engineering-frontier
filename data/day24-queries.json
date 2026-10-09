@@ -1,0 +1,14 @@
+[
+  {"id": "k8s-001", "query": "spec status"},
+  {"id": "k8s-002", "query": "Deployment ReplicaSet"},
+  {"id": "k8s-003", "query": "Service selector"},
+  {"id": "k8s-004", "query": "readiness probe"},
+  {"id": "k8s-005", "query": "Secret etcd"},
+  {"id": "k8s-006", "query": "StatefulSet"},
+  {"id": "k8s-007", "query": "PersistentVolumeClaim"},
+  {"id": "k8s-008", "query": "kube scheduler"},
+  {"id": "k8s-009", "query": "RoleBinding"},
+  {"id": "k8s-010", "query": "startup probe"},
+  {"id": "broad", "query": "Pod"},
+  {"id": "no-hit", "query": "frontierday24nomatch7d81"}
+]

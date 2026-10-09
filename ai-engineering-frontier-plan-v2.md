@@ -20,7 +20,7 @@
 4. 產生附來源的回答。
 5. 在沒有答案時明確表示不知道。
 6. 使用一個受限制的本地工具完成簡單任務。
-7. 以受限制的任務流程串起查詢、工具與驗證。
+7. 透過本機 HTML 介面查詢知識庫並查看來源。
 
 30 天結束時，讀者拿到的不只是文章，而是一套可以替換資料、Prompt、工具與模型的最小本地 AI 架構。
 
@@ -44,8 +44,9 @@
 | Day 7 | 擁有可重複使用的本地聊天程式 |
 | Day 14 | 能用自己的文件建立第一版知識庫問答 |
 | Day 21 | 能讓 AI 呼叫一個安全的本地工具 |
-| Day 27 | 擁有有步數限制、錯誤處理與驗證的 Agent |
-| Day 30 | 完整架構、benchmark、結果與可延伸 Repo |
+| Day 27 | 用大量真實文件測出知識庫的容量、速度與回答品質 |
+| Day 29 | 透過本機 HTML 介面查詢知識庫並查看來源 |
+| Day 30 | 拿到可重跑的評估結果、使用方式與可延伸 Repo |
 
 ## 3. 範圍控制
 
@@ -72,9 +73,11 @@ budget-aware retrieval / context builder
     ↓
 一個 Read-only Tool
     ↓
-受限制的任務流程
+真實語料的規模與品質評估
     ↓
-Evaluation 與完整 README
+本機 HTML 使用介面
+    ↓
+完整 README 與實測結果
 ```
 
 ### 延伸內容，不影響完賽
@@ -189,8 +192,9 @@ Day 3：模型直接回答
 Day 7：模型遵守固定回答格式
 Day 14：模型先從整理後的知識層找證據，再用 RAG 回答
 Day 21：模型可以查詢文件目錄與檢查設定
-Day 27：模型會判斷是否需要工具，且最多執行 3 步
-Day 30：系統有來源、評估、日誌與安全限制
+Day 27：用真實大量資料量測匯入、檢索與回答品質
+Day 29：使用者能從本機 HTML 介面查詢並查看來源
+Day 30：系統有可重跑的評估結果、使用說明與限制
 ```
 
 建議使用一組自己撰寫、可公開的虛構工程文件，例如：
@@ -211,7 +215,8 @@ knowledge/inbox/
 - 需要跨文件查找的題目
 - 文件中沒有答案的題目
 - 可能受到 Prompt Injection 影響的文件內容
-- 至少一組工具任務
+
+Day 22 起，另選擇一組來源與授權清楚、可重新取得的真實文件語料，專門用於規模與品質測試。記錄語料來源、版本或快照、授權、文件數與總大小；小型虛構文件仍保留給日常開發 checkpoint，不拿它代表真實資料規模。
 
 ## 6. 建議實驗環境
 
@@ -249,7 +254,7 @@ Optional draft model: incoai/Qwen3.8-27B-DFlash2
 client.chat(messages, tools=None, response_format=None)
 ```
 
-如此讀者日後換模型或 runtime 時，不需要重寫 RAG 與 Agent。
+如此讀者日後換模型或 runtime 時，不需要重寫 RAG 與本機介面。
 
 ### 硬體受限時的工作路徑
 
@@ -299,28 +304,30 @@ client.chat(messages, tools=None, response_format=None)
 | 20 | MCP 解決了什麼問題？ | 直接工具與 MCP 的小比較 | `day20: optional mcp adapter` |
 | 21 | 第三週回顧：安全工具層 | 可重複執行的 tool checkpoint | `day21: checkpoint-tools` |
 
-Day 20 的 MCP 是 optional。即使跳過，讀者仍然能完成後續 Agent 與最終系統。
+Day 20 的 MCP 是 optional。即使跳過，讀者仍然能完成真實語料測試、本機介面與最終系統。
 
-### Week 4：從工具呼叫走到受限制的任務流程
-
-| Day | 文章主題 | 當日可見成果 | Git 產出 |
-|---:|---|---|---|
-| 22 | 工具呼叫和任務流程的差別 | 最小規劃 → 執行 → 驗證流程 | `day22: add task workflow` |
-| 23 | Agent 為什麼會失控？ | max steps、timeout、allowlist | `day23: add agent limits` |
-| 24 | 失敗後要不要重試？ | bounded retry | `day24: add bounded retry` |
-| 25 | Verifier 能不能檢查答案？ | generator → verifier | `day25: add verifier` |
-| 26 | 記憶先從 Session State 開始 | 可重設的短期記憶 | `day26: add session state` |
-| 27 | Prompt Injection 與安全邊界 | 不信任文件、工具與輸入 | `day27: add safety checks` |
-
-這一週不做多 Agent、不開放 shell、不讓模型自行修改檔案。Agent 的預設工具必須是唯讀，最多 3 步，並且每一步都留下 log。第一版每個任務先限制為一次 Qwen 判斷，其餘參數檢查、工具執行與結果驗證由程式處理；增加模型回合前要先量測整段任務延遲。Day 17 的來源匯入是唯一受限寫入例外：只能匯入使用者在前一回合選定的搜尋結果，不能讓模型自行選路徑或改寫檔案。
-
-### Week 5：評估、包裝與交付
+### Week 4：把知識庫放進真實資料裡測
 
 | Day | 文章主題 | 當日可見成果 | Git 產出 |
 |---:|---|---|---|
-| 28 | 「感覺比較好」不算評估 | 固定 benchmark dataset | `day28: add evaluation set` |
-| 29 | 把系統交給讀者 | README、啟動指令、簡易本地 UI 或 API | `day29: improve onboarding` |
-| 30 | 30 天後系統變強多少？ | 完整結果、架構圖、限制與 roadmap | `day30: release v1.0` |
+| 22 | 五份範例文件夠測知識庫嗎？ | 選定可重現的真實語料、記錄授權與規模，建立第一批標準問題與證據標記 | `day22: select real corpus` |
+| 23 | 大量文件匯得進來嗎？ | 批次匯入結果、成功率與失敗原因 | `day23: ingest real corpus` |
+| 24 | 資料變多後，索引和查詢慢多少？ | 記錄索引耗時、索引大小、資源用量與查詢延遲 | `day24: measure corpus scale` |
+| 25 | 系統找得到正確證據嗎？ | 用標記過的標準問題量測 Recall@K 與檢索延遲 | `day25: measure retrieval quality` |
+| 26 | 找到片段後，回答和引用可靠嗎？ | 量測答案正確、引用支持度與應拒答題的表現 | `day26: evaluate grounded answers` |
+| 27 | 最大的錯誤或瓶頸在哪裡？ | 根據失敗案例改一項，再用相同語料與題目重測 | `day27: improve knowledge evaluation` |
+
+先按本機硬體能力訂出可重跑的資料量，不預設特定文件數就是「大量」。記錄語料文件數、總 bytes、格式與轉換成功率、索引耗時和大小、峰值記憶體，以及查詢延遲。準確率測試使用人工確認的標準答案與支援證據；不以大量資料成功匯入，推論回答就正確。沿用 Day 17 的來源選取與寫入限制，不讓模型任意指定路徑或修改檔案。
+
+### Week 5：整理評估、做好介面並交付
+
+| Day | 文章主題 | 當日可見成果 | Git 產出 |
+|---:|---|---|---|
+| 28 | 同一批資料重跑，結果有沒有變好？ | 封存可重跑的 benchmark、比較原始版本與改動後版本 | `day28: finalize knowledge benchmark` |
+| 29 | 不用進終端機也能查知識庫 | 本機 HTML 查詢介面、來源顯示，以及一鍵啟動並開啟瀏覽器的啟動檔 | `day29: add local HTML interface` |
+| 30 | 30 天後，這套知識庫能做到什麼？ | 公布規模、速度、準確率、架構、限制與使用方式，整理 v1.0 | `day30: release v1.0` |
+
+純 HTML 檔受瀏覽器本機安全限制，不能直接操作 Python 與 SQLite。Day 29 的雙擊體驗以本機啟動檔啟動只綁定 localhost 的服務，再開啟 HTML 介面；不把資料庫或任意檔案存取權直接交給瀏覽器頁面。
 
 ## 8. 每日文章與寫作規範
 
@@ -350,46 +357,30 @@ Level 3：修改程式，加入自己的工具
 
 ## 9. Benchmark 設計
 
-不要等到 Day 28 才第一次評估。Day 3 先建立最小版本，之後逐步增加題目。
-
-建議第一版包含 30 題：
+不要等到 Day 28 才第一次評估。Day 22 先用選定的真實語料建立小型基準，再逐步增加題目；Day 28 封存固定版本。第一版目標可設為 30 題，依語料調整題數與類別：
 
 ```text
 10 題：文件中有明確答案
 5 題：需要跨兩份文件
 5 題：文件中沒有答案，應該拒答
-5 題：會誘導模型忽略來源的文件內容
-5 題：需要工具完成的任務
+5 題：版本衝突或容易混淆的內容
+5 題：文件中含有誘導模型忽略來源的文字
 ```
 
-### Miracle-lite 消融實驗
+每題記錄標準答案或預期拒答，以及支援答案的來源和 chunk。這樣才能判斷失敗發生在檢索階段，還是模型拿到證據後仍答錯。大型語料若不適合提交，Repo 保存取得方式、版本與校驗資訊；不提交未授權或不必要的原始文件。
 
-固定同一模型、文件、問題、生成參數與 context budget，至少比較三條路徑：
-
-```text
-A. Direct RAG
-   raw documents → chunks → retrieval → answer
-
-B. Miracle RAG
-   wiki pages → retrieval → answer
-
-C. Hierarchical RAG
-   metadata/source/concept → raw evidence chunks → answer
-```
-
-C 是本專案預期的主架構，但不能先假設它一定最好。先用整份題庫比較可離線計算的檢索命中、chunk 數與 token 成本；每條路徑再挑固定少量題目交給 Qwen 比較回答與引用。不要在 32 GB 筆電上把 30 題乘以三條路徑當成每次修改都要重跑的即時測試。完整模型評估若耗時超出可用預算，保留題庫、抽樣規則與未完成範圍，不能用 mock 回答冒充實測。
+固定同一語料、問題、模型、生成參數與 context budget，優先比較現有版本和一項實際改動後的結果。若 Direct RAG、wiki RAG 或階層式檢索等路徑已在程式中完成，再用同一 benchmark 比較；不把尚未實作的路徑寫成實測結果，也不預設哪種架構一定最好。整份題庫先比較可自動驗收的檢索指標；模型回答則依本機時間預算做固定抽樣，記錄抽樣規則與未完成範圍。不能用 mock 回答冒充 Qwen 實測。
 
 主要指標：
 
 | 類別 | 指標 |
 |---|---|
-| 回答品質 | answer accuracy、citation correctness、abstention accuracy |
-| Retrieval | Recall@K、命中正確 chunk 的比例 |
-| Tool | tool selection、argument validity、task success |
-| Agent | completion rate、step count、retry count |
+| 語料匯入 | 文件數、總 bytes、轉換成功率、失敗格式與原因 |
+| 索引與效能 | 建置時間、索引大小、峰值記憶體、查詢延遲（含 p50／p95） |
+| Retrieval | Recall@K、命中支援證據的比例 |
+| 回答品質 | answer accuracy、citation support、abstention accuracy |
 | Context | input tokens、retrieval tokens、context utilization、重複內容比例 |
-| 效能 | TTFT、總延遲、output tokens/s |
-| 資源 | peak memory、模型載入時間、索引大小 |
+| 模型效能 | TTFT、總延遲、output tokens/s、模型載入時間 |
 
 每次實驗固定保存：
 
@@ -398,6 +389,10 @@ model_id
 model_revision
 runtime_version
 hardware
+corpus_source
+corpus_revision_or_snapshot
+corpus_license
+corpus_checksum
 prompt_config
 retrieval_config
 generation_config
@@ -444,7 +439,8 @@ day30: release v1.0
 day07-chat
 day14-rag
 day21-tools
-day27-agent
+day28-benchmark
+day29-ui
 v1.0
 ```
 
@@ -507,14 +503,17 @@ ai-engineering-frontier/
 │       ├── context_budget.py
 │       ├── evidence_pipeline.py
 │       ├── readonly_actions.py
-│       ├── task_flow.py
 │       ├── evaluation.py
-│       └── knowledge_checks.py
+│       ├── knowledge_checks.py
+│       └── local_server.py
 ├── scripts/
 │   ├── run_chat.py
 │   ├── build_knowledge.py
 │   ├── evaluate_system.py
-│   └── inspect_environment.py
+│   ├── inspect_environment.py
+│   └── launch_local_ui.command
+├── ui/
+│   └── index.html
 ├── data/
 │   └── benchmark.jsonl
 ├── knowledge/
@@ -540,7 +539,7 @@ ai-engineering-frontier/
 ├── configs/
 │   ├── baseline.yaml
 │   ├── rag.yaml
-│   └── agent.yaml
+│   └── ui.yaml
 ├── runs/
 │   └── .gitkeep
 └── docs/
@@ -564,11 +563,14 @@ ai-engineering-frontier/
 - 問題回答會顯示來源文件與 chunk。
 - 找不到資料時不會硬猜。
 - Context builder 會在固定 token budget 內選擇證據。
-- 完成 Direct RAG、Miracle RAG、Hierarchical RAG 的比較結果。
 - 至少有一個唯讀工具。
-- Agent 有步數上限、timeout 與錯誤處理。
+- 使用來源與授權可說明的真實文件語料完成規模測試，報告資料量、匯入成功率、索引成本與查詢效能。
+- 使用有標準答案和支援證據的固定題集評估檢索、回答、引用與拒答表現。
+- 同一題集可重跑，能比較至少一項實作改動前後的結果。
+- 使用者可雙擊本機啟動檔，開啟只連到 localhost 的 HTML 查詢介面並查看回答來源。
+- README 說明資料取得、授權、匯入、啟動介面與重跑 benchmark 的步驟。
 - benchmark 可一個命令重新執行。
-- 結果同時包含品質、效能與資源使用量。
+- 結果分開呈現品質、速度與資源使用量，不合併成無法解讀的單一分數。
 - Repo 不含模型權重、秘密或未授權資料。
 
 ## 14. 延伸 Roadmap

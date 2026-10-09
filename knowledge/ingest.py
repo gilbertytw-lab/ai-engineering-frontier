@@ -92,7 +92,8 @@ class Tokenizer:
 
 
 def parse_raw_document(path: Path) -> RawDocument:
-    text = path.read_text(encoding="utf-8")
+    with path.open(encoding="utf-8", newline="") as stream:
+        text = stream.read()
     if not text.startswith("---\n"):
         raise ValueError(f"raw 檔缺少 YAML frontmatter：{path}")
 
@@ -226,9 +227,14 @@ def build_manifest(
     tokenizer_name: str = DEFAULT_TOKENIZER,
     max_tokens: int = 256,
     overlap_tokens: int = 32,
+    document_limit: int | None = None,
 ) -> dict[str, Any]:
+    if document_limit is not None and document_limit <= 0:
+        raise ValueError("document_limit 必須大於 0")
     tokenizer = Tokenizer(tokenizer_name)
     raw_paths = sorted(raw_dir.glob("*.md"))
+    if document_limit is not None:
+        raw_paths = raw_paths[:document_limit]
     if not raw_paths:
         raise ValueError(f"找不到 raw Markdown：{raw_dir}")
 
@@ -281,6 +287,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--tokenizer", default=DEFAULT_TOKENIZER)
     parser.add_argument("--max-tokens", type=int, default=256)
     parser.add_argument("--overlap-tokens", type=int, default=32)
+    parser.add_argument("--document-limit", type=int, help="依 raw 檔名排序後取前 N 份")
     return parser.parse_args()
 
 
@@ -293,6 +300,7 @@ def main() -> int:
             tokenizer_name=args.tokenizer,
             max_tokens=args.max_tokens,
             overlap_tokens=args.overlap_tokens,
+            document_limit=args.document_limit,
         )
     except (OSError, RuntimeError, ValueError) as error:
         print(f"ingest 失敗：{error}", file=sys.stderr)

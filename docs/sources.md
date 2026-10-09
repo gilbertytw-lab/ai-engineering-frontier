@@ -225,3 +225,51 @@ Day 1 沒有把外部文章、程式碼、圖片或範例資料放入 Repository
 - 用途：核對 MCP server 可提供的 tools、resources 與 prompts，以及工具介面的探索與呼叫方式。
 - 使用範圍：Day 20 以自己的文字說明這些介面；沒有複製文件段落或程式碼。
 - 是否包含程式碼、文字或圖片：否。
+
+## Day 22 Kubernetes 文件語料
+
+### S026：Kubernetes website 文件原始碼
+
+- URL：https://github.com/kubernetes/website
+- 存取日期：2026-10-05
+- 使用版本：commit `77db41e9c776b614fdb31de4cc6c8e9a70673817`，範圍 `content/en/docs/**/*.md`。
+- 用途：選取可固定版本的 Kubernetes 英文文件作為知識庫規模與品質測試語料，盤點檔案數、位元組數，並為起始題集標示證據位置。
+- 使用範圍：只把檔案路徑和章節記入 `data/benchmark.jsonl`；預期答案為轉述，沒有把來源 Markdown 全文複製進 Repository。該 commit 的 `LICENSE` 標示 CC BY 4.0。
+- 是否包含程式碼、文字或圖片：否；只記錄來源中繼資料與自行撰寫的題目、答案。
+
+### S027：Kubernetes 可用文件版本
+
+- URL：https://kubernetes.io/docs/home/supported-doc-versions/
+- 存取日期：2026-10-05
+- 用途：確認 Day 22 語料盤點日，官方文件版本頁列出的目前文件版本為 v1.37。
+- 使用範圍：只用於版本確認，沒有複製頁面文字。
+- 是否包含程式碼、文字或圖片：否。
+
+## Day 23 Kubernetes 批次匯入
+
+沿用 S026 的固定 commit 與 CC BY 4.0 授權。2026-10-07 重新取得 `content/en/docs/**/*.md`，檔案數、位元組數和 checksum 與 Day 22 相同。1,720 份來源 Markdown、轉換後 raw 與逐檔報告均收在 [`data/day23/`](../data/day23/README.md)，隨 Repository 提供下載；原始完整工作區則保留在 `data/local-workspaces/`，不納入 GitHub。
+
+本次實際用於診斷與抽查的原始文件：
+
+- [metrics-reference.md](https://github.com/kubernetes/website/blob/77db41e9c776b614fdb31de4cc6c8e9a70673817/content/en/docs/contribute/generate-ref-docs/metrics-reference.md)：定位 CRLF 驗證失敗，原始位元組未修改。
+- [configmap.md](https://github.com/kubernetes/website/blob/77db41e9c776b614fdb31de4cc6c8e9a70673817/content/en/docs/concepts/configuration/configmap.md)：確認 Markdown 中的 glossary shortcode 原樣保留。
+- [probes.md](https://github.com/kubernetes/website/blob/77db41e9c776b614fdb31de4cc6c8e9a70673817/content/en/docs/concepts/workloads/pods/probes.md)：抽查開頭、中段、結尾與來源欄位。
+- [固定快照 LICENSE](https://github.com/kubernetes/website/blob/77db41e9c776b614fdb31de4cc6c8e9a70673817/LICENSE)：核對授權原件；專案內 `data/day23/source/LICENSE` 保存授權副本。
+
+## Day 24 索引規模與查詢效能
+
+### S028：SQLite FTS5 BM25 與 optimize
+
+- URL：https://sqlite.org/fts5.html#the_bm25_function 、 https://sqlite.org/fts5.html#the_optimize_command
+- 存取日期：2026-10-07
+- 用途：核對既有 retriever 的 BM25 排序及 `optimize` 命令，釐清建置時間包含哪些操作。
+- 使用範圍：文章以自己的文字說明現有程式；候選數、索引容量、速度與記憶體都由本機實測取得，不引用官方效能保證。
+- 是否包含程式碼、文字或圖片：否；沒有複製官方段落或範例程式。
+
+### S029：Python 3.13 resource
+
+- URL：https://docs.python.org/3.13/library/resource.html
+- 存取日期：2026-10-07
+- 用途：核對 `getrusage(RUSAGE_SELF)` 與 `ru_maxrss` 的 API 意義。
+- 使用範圍：量測每個規模的新子程序峰值 RSS；macOS 單位另對照本機 `man getrusage`（bytes），沒有套用舊版 Apple 線上 man page 的 kilobytes 說法。
+- 是否包含程式碼、文字或圖片：否；沒有複製官方段落或程式。

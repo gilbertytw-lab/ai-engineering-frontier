@@ -1,0 +1,69 @@
+{
+  "date": "2026-10-07",
+  "timezone": "Asia/Taipei",
+  "source_repository": "https://github.com/kubernetes/website",
+  "source_commit": "77db41e9c776b614fdb31de4cc6c8e9a70673817",
+  "source_scope": "content/en/docs/**/*.md",
+  "source_license": "CC BY 4.0",
+  "corpus_checksum": "f24ab9f07bf34806d5f2e703d0b283660693bda0ec0a49b32c31e8a1792a9413",
+  "converter_version": "0.3.0",
+  "environment": {
+    "python": "3.13.15",
+    "hardware": "Apple M5",
+    "memory_bytes": 34359738368
+  },
+  "first_pass": {
+    "source_files": 1720,
+    "source_bytes": 16198192,
+    "converted": 1719,
+    "reused": 0,
+    "failed": 1,
+    "success_rate": 0.9994186046511628,
+    "raw_files": 1719,
+    "raw_bytes": 17511877,
+    "elapsed_seconds": 2.0455837919998885
+  },
+  "retry_after_fix": {
+    "source_files": 1720,
+    "source_bytes": 16198192,
+    "converted": 1,
+    "reused": 1719,
+    "failed": 0,
+    "success_rate": 1.0,
+    "raw_files": 1720,
+    "raw_bytes": 17515305,
+    "elapsed_seconds": 0.42550533400026325
+  },
+  "repeat_after_fix": {
+    "source_files": 1720,
+    "source_bytes": 16198192,
+    "converted": 0,
+    "reused": 1720,
+    "failed": 0,
+    "success_rate": 1.0,
+    "raw_files": 1720,
+    "raw_bytes": 17515305,
+    "elapsed_seconds": 0.39691070899971237
+  },
+  "first_pass_failures": [
+    {
+      "source_path": "contribute/generate-ref-docs/metrics-reference.md",
+      "source_bytes": 2694,
+      "source_sha256": "a51d1ba19a88fb9eb542e1bb5ee2ac65eb6412476350ce62c6d81f6a62bf7af7",
+      "error": "Markdown 正文與來源抽取結果不一致"
+    }
+  ],
+  "final_audit": {
+    "originals_byte_identical": 1720,
+    "raw_validated": 1720,
+    "raw_bytes": 17515305,
+    "pending_files": 0,
+    "source_url_fields": 1720,
+    "relative_source_names": 1720
+  },
+  "tests": {
+    "project": 85,
+    "converter": 5
+  },
+  "measurement_scope": "Local Markdown checksum, staging, conversion and validation; excludes Git download, chunking, indexing and model requests."
+}

@@ -12,7 +12,7 @@ Day 8 的讀者入口另設 [`knowledge/convert.py`](../knowledge/convert.py)。
 
 ## 三份隨機完整 PDF
 
-從 `/Users/gilbert/Miracle/raw/papers` 的五份完整論文候選中，以 `random.Random(20260922).sample(sorted(papers), 3)` 取三份，唯讀測試。來源路徑與雜湊見本機 `day08-real-source-test/test-manifest.json`。三份來源與轉換結果只保存在 `/Users/gilbert/Data/ai-engineering-frontier/workspaces/day08-programmatic-migration/`。
+從五份完整論文候選中，以 `random.Random(20260922).sample(sorted(papers), 3)` 取三份，唯讀測試。來源路徑與雜湊見本機 `data/local-workspaces/ai-engineering-frontier/workspaces/day08-real-source-test/test-manifest.json`。三份來源與轉換結果保存在 `data/local-workspaces/ai-engineering-frontier/workspaces/day08-programmatic-migration/`；其中的論文與網頁快照是本機測試素材，不隨 GitHub 發布。
 
 | PDF | 頁數 | 抽取字元 | 轉換耗時 | 逐頁核對 |
 | --- | ---: | ---: | ---: | --- |
@@ -50,4 +50,4 @@ git diff --check
 
 ## 保留與發布
 
-轉換器舊版、五份舊 raw、舊文章與計畫，保存在 `/Users/gilbert/Data/ai-engineering-frontier/workspaces/day08-programmatic-migration/pre-change/`，可用來回復。第三方 PDF 與網頁快照均不放在參賽 Repo。[`source-to-raw-md` 獨立 Repository](https://github.com/gilbertytw-lab/source-to-raw-md) 已於本日發布，`main` commit 為 `a6b9e4a27902b294996e2d918b7e1a52222382fc`；本參賽 Repo 的 Day 8 修改尚未 commit 或 push。
+轉換器舊版、五份舊 raw、舊文章與計畫，保存在 `data/local-workspaces/ai-engineering-frontier/workspaces/day08-programmatic-migration/pre-change/`，可用來回復。第三方 PDF 與網頁快照僅供本機驗證，不納入參賽 Repository；讀者可用自己的合法來源測試轉換器。[`source-to-raw-md` 獨立 Repository](https://github.com/gilbertytw-lab/source-to-raw-md) 已於本日發布，`main` commit 為 `a6b9e4a27902b294996e2d918b7e1a52222382fc`；本參賽 Repo 的 Day 8 修改尚未 commit 或 push。

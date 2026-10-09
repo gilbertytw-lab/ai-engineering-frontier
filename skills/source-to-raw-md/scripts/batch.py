@@ -75,7 +75,7 @@ def convert_selected_source(source: Path, root: Path) -> Path:
                 finally:
                     temporary_sidecar.unlink(missing_ok=True)
                 sidecar_copied = True
-        output = convert(str(destination), inbox, raw)
+        output = convert(str(destination), inbox, raw, snapshot_root=root)
         validate_file(output, root)
     except (OSError, UnicodeError, ValueError, RuntimeError):
         if copied:

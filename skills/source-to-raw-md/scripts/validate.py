@@ -20,7 +20,10 @@ SUFFIX = {"txt": ".txt", "md": ".md", "markdown": ".markdown", "pdf": ".pdf", "h
 
 
 def validate_file(path: Path, root: Path) -> tuple[str, int | None]:
-    raw = path.read_text(encoding="utf-8")
+    # The Markdown body can retain CRLF from its source. Avoid universal-newline
+    # translation so the comparison uses the bytes the converter actually wrote.
+    with path.open(encoding="utf-8", newline="") as stream:
+        raw = stream.read()
     if not raw.startswith("---\n") or "\n---\n\n" not in raw[4:]:
         raise ValueError("缺少 YAML frontmatter 或 Markdown 正文")
     header, body = raw[4:].split("\n---\n\n", 1)

@@ -1,0 +1,80 @@
+---
+document_id: "doc-baaf4e3b26b0e143"
+source_name: "home/_index.md"
+source_type: "text"
+source_format: "md"
+source_sha256: "6040459371f3e9c0d7d61b432b9c0f72560a53c6cecca9bec225bfd92e457462"
+source_snapshot: "data/day23/source/content/en/docs/home/_index.md"
+extracted_sha256: "6040459371f3e9c0d7d61b432b9c0f72560a53c6cecca9bec225bfd92e457462"
+conversion_method: "programmatic"
+converter_version: "0.3.0"
+source_url: "https://github.com/kubernetes/website/blob/77db41e9c776b614fdb31de4cc6c8e9a70673817/content/en/docs/home/_index.md"
+---
+
+---
+approvers:
+- chenopis
+title: Kubernetes Documentation
+noedit: true
+layout: docsportal_home
+body_class: docs-portal
+linkTitle: "Documentation"
+main_menu: true
+weight: 10
+hide_feedback: true
+notoc: true
+menu:
+  main:
+    title: "Documentation"
+    weight: 10
+description: >
+  Kubernetes is an open source container orchestration engine for automating deployment, scaling, and management of containerized applications. The open source project is hosted by the Cloud Native Computing Foundation.
+overview: >
+  Kubernetes is an open source container orchestration engine for automating deployment, scaling, and management of containerized applications. The open source project is hosted by the Cloud Native Computing Foundation (<a href="https://www.cncf.io/about">CNCF</a>).
+cards:
+- name: concepts
+  title: "Understand Kubernetes"
+  description: "Learn about Kubernetes and its fundamental concepts."
+  button: "View Concepts"
+  button_path: "/docs/concepts"
+- name: tutorials
+  title: "Try Kubernetes"
+  description: "Follow tutorials to learn how to deploy applications in Kubernetes."
+  button: "View Tutorials"
+  button_path: "/docs/tutorials"
+- name: setup
+  title: "Set up a K8s cluster"
+  description: "Get Kubernetes running based on your resources and needs."
+  button: "Set up Kubernetes"
+  button_path: "/docs/setup"
+- name: tasks
+  title: "Learn how to use Kubernetes"
+  description: "Look up common tasks and how to perform them using a short sequence of steps."
+  button: "View Tasks"
+  button_path: "/docs/tasks"
+- name: reference
+  title: Look up reference information
+  description: Browse terminology, command line syntax, API resource types, and setup tool documentation.
+  button: View Reference
+  button_path: /docs/reference
+- name: contribute
+  title: Contribute to Kubernetes
+  description: Find out how you can help make Kubernetes better.
+  button: See Ways to Contribute
+  button_path: "/docs/contribute"
+- name: training
+  title: "Training"
+  description: "Get certified in Kubernetes and make your cloud native projects successful!"
+  button: "View training"
+  button_path: "/training"
+- name: Download
+  title: Download Kubernetes
+  description: Install Kubernetes or upgrade to the newest version.
+  button: "Download Kubernetes"
+  button_path: "/releases/download"
+- name: about
+  title: About the documentation
+  description: This website contains documentation for the current and previous 4 versions of Kubernetes.
+  button: "See available versions"
+  button_path: "/docs/home/supported-doc-versions"
+---

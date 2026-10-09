@@ -2,7 +2,7 @@
 
 這是「AI Engineering 研究前線」30 天實作專案的工作 Repository。報名標題維持不變；本專案的實作目標是讓只使用過網頁對話式 AI 的讀者，逐步建立一套可以在自己電腦上執行的本地工程知識助理。
 
-目前進度：**Day 20／完成工具參數驗證與 MCP 架構比較**
+目前進度：**Day 24／完成 Kubernetes 索引規模與查詢效能量測**
 
 ## 專案目標
 
@@ -331,3 +331,25 @@ uv run python -m unittest tests.test_day15_tools tests.test_day16_tools tests.te
 Day 20 比較應用程式直接呼叫 Python 工具函式，與透過 MCP client/server 探索和執行工具的差異。目前專案只有一個本地 AI 助理；MCP adapter 仍是選配，文章依現有程式與官方文件整理架構比較，沒有新增 MCP client 或 server。
 
 完整說明與官方來源見 [Day 20 文章](articles/day20.md)。
+
+## Day 21～22
+
+Day 21 整理第三週工具 checkpoint，Day 22 固定 Kubernetes 官方英文 Markdown 的來源 commit，盤點 1,720 份文件並整理十題起始題集。完整內容見 [Day 21](articles/day21.md)、[Day 22](articles/day22.md)和[語料紀錄](docs/day22-verification.md)。
+
+## Day 23
+
+`knowledge/import_corpus.py` 以固定 checksum 核對 Markdown 語料，保留相對來源路徑與固定版本網址，再用既有 converter 匯入指定工作區，保存逐檔成功、沿用與失敗紀錄。Kubernetes 語料首輪有 1 份 CRLF 文件驗證失敗；修正讀取 raw 時的換行轉換後，1,720 份全部通過，再次執行全數沿用並驗證。
+
+固定版本的 1,720 份來源 Markdown、轉換後 raw 與逐檔報告都收在專案的 [Day 23 語料資料夾](data/day23/README.md)，可隨 GitHub Repository 下載。完整量測摘要見 [結果摘要](data/day23-import-summary.json)；匯入命令、數據與限制見 [Day 23 文章](articles/day23.md)和[驗證紀錄](docs/day23-verification.md)。
+
+## Day 24
+
+`knowledge/benchmark_scale.py` 將同一批 raw 依檔名排序，取 100、500、1,720 份文件，分別在新子程序中量測 chunk manifest、FTS5 建置、檔案大小、程序峰值 RSS 與固定查詢延遲。全量產生 36,807 個 chunks；本次切塊與 manifest 花 18.685 秒，FTS5 建置花 0.575 秒，240 筆暖身後查詢的 p50／p95 為 0.357／5.861 毫秒。這些是固定詞組與單機量測，品質評分另行處理。
+
+```bash
+HF_HUB_OFFLINE=1 uv run python knowledge/benchmark_scale.py \
+  --workspace-root data/day24/reproduction \
+  --sizes 100 500 1720 --rounds 20 --limit 5
+```
+
+工作區已存在時，改用 `data/day24/reproduction-2` 等新名稱。完整文章見 [Day 24](articles/day24.md)，量測邊界與檢查結果見 [驗證紀錄](docs/day24-verification.md)；固定查詢詞、逐筆耗時與索引 audit 分別保存在 [queries](data/day24-queries.json)、[summary](data/day24-scale-summary.json)和[audit](data/day24-index-audit.json)。

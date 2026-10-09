@@ -16,3 +16,8 @@ runs/*
 
 # Local user knowledge must never be committed by default
 knowledge/local/
+
+# Private source samples and rollback workspaces; public Day 23 corpus lives in data/day23/
+data/local-workspaces/
+data/day23/reproduction/
+data/day24/reproduction*/

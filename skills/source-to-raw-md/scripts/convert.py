@@ -288,9 +288,16 @@ def snapshot_source(source_arg: str, source: Source, source_dir: Path, doc_id: s
     return target
 
 
-def render_markdown(source: Source, extraction: Extraction, doc_id: str, snapshot: Path) -> str:
+def render_markdown(
+    source: Source,
+    extraction: Extraction,
+    doc_id: str,
+    snapshot: Path,
+    snapshot_root: Path | None = None,
+) -> str:
+    root = snapshot_root.resolve() if snapshot_root is not None else Path.cwd()
     try:
-        snapshot_name = snapshot.relative_to(Path.cwd()).as_posix()
+        snapshot_name = snapshot.relative_to(root).as_posix()
     except ValueError:
         snapshot_name = snapshot.as_posix()
     fields = {
@@ -315,7 +322,12 @@ def render_markdown(source: Source, extraction: Extraction, doc_id: str, snapsho
     return f"---\n{header}\n---\n\n{extraction.body}"
 
 
-def convert(source_arg: str, source_dir: Path, output_dir: Path) -> Path:
+def convert(
+    source_arg: str,
+    source_dir: Path,
+    output_dir: Path,
+    snapshot_root: Path | None = None,
+) -> Path:
     if source_dir.resolve() == output_dir.resolve():
         raise ValueError("原檔目錄與 raw 輸出目錄不可相同")
     source = read_source(source_arg)
@@ -323,7 +335,8 @@ def convert(source_arg: str, source_dir: Path, output_dir: Path) -> Path:
     doc_id = document_id(source, extraction.identity_text)
     output = output_dir / f"{doc_id}.md"
     if output.exists():
-        existing = output.read_text(encoding="utf-8")
+        with output.open(encoding="utf-8", newline="") as stream:
+            existing = stream.read()
         content_field = (
             f'extracted_sha256: "{hashlib.sha256(extraction.identity_text.encode("utf-8")).hexdigest()}"'
             if source.kind == "web" else f'source_sha256: "{hashlib.sha256(source.data).hexdigest()}"'
@@ -331,7 +344,7 @@ def convert(source_arg: str, source_dir: Path, output_dir: Path) -> Path:
         if all(field in existing for field in (f'document_id: "{doc_id}"', content_field,
                                                'conversion_method: "programmatic"', f'converter_version: "{VERSION}"')):
             snapshot = snapshot_source(source_arg, source, source_dir, doc_id)
-            desired = render_markdown(source, extraction, doc_id, snapshot)
+            desired = render_markdown(source, extraction, doc_id, snapshot, snapshot_root)
             if existing != desired:
                 old_snapshot = re.search(r'^source_snapshot: .+$', existing, flags=re.M)
                 new_snapshot = re.search(r'^source_snapshot: .+$', desired, flags=re.M)
@@ -348,7 +361,7 @@ def convert(source_arg: str, source_dir: Path, output_dir: Path) -> Path:
             return output
         raise RuntimeError(f"raw 檔已存在但格式或來源版本不同：{output}；請先保留舊版並另選輸出目錄")
     snapshot = snapshot_source(source_arg, source, source_dir, doc_id)
-    rendered = render_markdown(source, extraction, doc_id, snapshot)
+    rendered = render_markdown(source, extraction, doc_id, snapshot, snapshot_root)
     output_dir.mkdir(parents=True, exist_ok=True)
     temporary = output.with_suffix(".md.tmp")
     try:
